@@ -89,7 +89,10 @@ var TeacherSelfServiceView = (() => {
       let shortPermitHours = 0;
       let malattiaDays = 0;
       let malattiaHours = 0;
+      let permessiGiornalieriCount = 0;
       let altroPermessoCount = 0;
+      let studioHours = 0;
+      let assembleaHours = 0;
 
       teacherAbs.forEach(a => {
         const type = (a.type || '').toLowerCase();
@@ -107,8 +110,14 @@ var TeacherSelfServiceView = (() => {
           } else {
             malattiaDays += 1;
           }
-        } else if (type === 'altro_permesso' || type === 'assenza_giornaliera' || type === 'motivi_personali') {
+        } else if (type === 'assenza_giornaliera' || type === 'motivi_personali') {
+          permessiGiornalieriCount++;
+        } else if (type === 'altro_permesso') {
           altroPermessoCount++;
+        } else if (type === 'diritto_studio' || type === '150_ore' || type === 'studio') {
+          studioHours += (hoursCount || 1);
+        } else if (type === 'assemblea' || type === 'assemblee') {
+          assembleaHours += (hoursCount || 1);
         }
       });
 
@@ -119,27 +128,31 @@ var TeacherSelfServiceView = (() => {
 
       const s = {
         malattia: `${malattiaDays} gg${malattiaHours > 0 ? ` (${malattiaHours}h)` : ''}`,
-        altro_permesso: stats.permessi_giornalieri || altroPermessoCount || 0,
+        permessi_giornalieri: stats.permessi_giornalieri || permessiGiornalieriCount || 0,
+        altro_permesso: altroPermessoCount || 0,
+        studio: studioHours,
         ferie: stats.ferie || 0,
         formazione: stats.formazione || 0,
         concorsi: stats.concorsi || 0,
         matrimonio: stats.matrimonio || 0,
         lutto: stats.lutto || luttoCount || 0,
         sindacali: stats.permessi_sindacali || 0,
-        assemblea: stats.assemblea || 0
+        assemblea: assembleaHours || stats.assemblea || 0
       };
 
       container.querySelector('#ts-stats-bar').innerHTML = `
         <div class="badge badge-error" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">🤒 Malattia: <strong>${s.malattia}</strong></div>
+        <div class="badge badge-success" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">🚫 Permessi Giornalieri: <strong>${s.permessi_giornalieri}/3</strong></div>
         <div class="badge badge-success" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">📄 Altri Permessi: <strong>${s.altro_permesso}/3</strong></div>
         <div class="badge badge-warning" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">⏳ Permessi Brevi: <strong>${shortPermitHours}/${weeklyH} h</strong></div>
+        <div class="badge badge-info" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">🎓 Diritto Studio: <strong>${s.studio}/150 h</strong></div>
         <div class="badge badge-info" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">🏝️ Ferie: <strong>${s.ferie}/6</strong></div>
         <div class="badge badge-secondary" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">📚 Formazione: <strong>${s.formazione}/5</strong></div>
         <div class="badge badge-secondary" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">📝 Concorsi: <strong>${s.concorsi}/8</strong></div>
         <div class="badge badge-neutral" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">💍 Matrimonio: <strong>${s.matrimonio}/15</strong></div>
         <div class="badge badge-neutral" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">🕊️ Lutto: <strong>${s.lutto} gg</strong> <span style="font-size:10px; opacity:0.8">(3gg/ev)</span></div>
-        <div class="badge badge-neutral" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">📢 Sindacale: <strong>${s.sindacali}/12</strong></div>
-        <div class="badge badge-ghost" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">👥 Assemblee: <strong>${s.assemblea}/10</strong></div>
+        <div class="badge badge-ghost" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">👥 Assemblee: <strong>${s.assemblea}/10 h</strong></div>
+        <div class="badge badge-neutral" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">📢 Sindacale (RSU): <strong>${s.sindacali}/12 gg</strong></div>
       `;
     } catch(e) { console.error('Stats error:', e); }
 
@@ -199,21 +212,29 @@ var TeacherSelfServiceView = (() => {
               <input type="radio" name="ts-abs-tipo" id="ts-tipo-mal-ore" value="malattia_ore" style="width:15px;height:15px;">
               <div><div style="font-weight:700; font-size:11px;">🩺 Malattia a Ore</div><div style="font-size:9px; color:var(--text-secondary);">Singole ore</div></div>
             </label>
-            <label id="ts-tipo-alt-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--accent); background:var(--accent-light);">
-              <input type="radio" name="ts-abs-tipo" id="ts-tipo-alt" value="altro_permesso" checked style="width:15px;height:15px;">
-              <div><div style="font-weight:700; font-size:11px;">📄 Altro Permesso</div><div style="font-size:9px; color:var(--text-secondary);">Max 3gg/anno (non rec.)</div></div>
+            <label id="ts-tipo-gen-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--accent); background:var(--accent-light);">
+              <input type="radio" name="ts-abs-tipo" id="ts-tipo-gen" value="assenza_giornaliera" checked style="width:15px;height:15px;">
+              <div><div style="font-weight:700; font-size:11px;">🚫 Permesso Giornaliero</div><div style="font-size:9px; color:var(--text-secondary);">Max 3gg/anno</div></div>
+            </label>
+            <label id="ts-tipo-alt-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
+              <input type="radio" name="ts-abs-tipo" id="ts-tipo-alt" value="altro_permesso" style="width:15px;height:15px;">
+              <div><div style="font-weight:700; font-size:11px;">📄 Altro Permesso</div><div style="font-size:9px; color:var(--text-secondary);">Max 3/anno (non rec.)</div></div>
             </label>
             <label id="ts-tipo-ora-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
               <input type="radio" name="ts-abs-tipo" id="ts-tipo-ora" value="permesso_orario" style="width:15px;height:15px;">
               <div><div style="font-weight:700; font-size:11px;">⏳ Permessi Brevi</div><div style="font-size:9px; color:var(--text-secondary);">Singole ore (con debito)</div></div>
             </label>
-            <label id="ts-tipo-usc-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
-              <input type="radio" name="ts-abs-tipo" id="ts-tipo-usc" value="uscita_didattica" style="width:15px;height:15px;">
-              <div><div style="font-weight:700; font-size:11px;">🚌 Uscita / Soggiorno</div></div>
+            <label id="ts-tipo-stu-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
+              <input type="radio" name="ts-abs-tipo" id="ts-tipo-stu" value="diritto_studio" style="width:15px;height:15px;">
+              <div><div style="font-weight:700; font-size:11px;">🎓 Diritto Studio</div><div style="font-size:9px; color:var(--text-secondary);">150 ore</div></div>
             </label>
             <label id="ts-tipo-fer-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
               <input type="radio" name="ts-abs-tipo" id="ts-tipo-fer" value="ferie" style="width:15px;height:15px;">
               <div><div style="font-weight:700; font-size:11px;">🏝️ Ferie / Permessi</div><div style="font-size:9px; color:var(--text-secondary);">Max 6gg (Art.15 c.2)</div></div>
+            </label>
+            <label id="ts-tipo-usc-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
+              <input type="radio" name="ts-abs-tipo" id="ts-tipo-usc" value="uscita_didattica" style="width:15px;height:15px;">
+              <div><div style="font-weight:700; font-size:11px;">🚌 Uscita / Soggiorno</div></div>
             </label>
             <label id="ts-tipo-for-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
               <input type="radio" name="ts-abs-tipo" id="ts-tipo-for" value="formazione" style="width:15px;height:15px;">
@@ -231,47 +252,67 @@ var TeacherSelfServiceView = (() => {
               <input type="radio" name="ts-abs-tipo" id="ts-tipo-lut" value="lutto" style="width:15px;height:15px;">
               <div><div style="font-weight:700; font-size:11px;">🕊️ Lutto</div><div style="font-size:9px; color:var(--text-secondary);">3gg / evento</div></div>
             </label>
+            <label id="ts-tipo-ass-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
+              <input type="radio" name="ts-abs-tipo" id="ts-tipo-ass" value="assemblea" style="width:15px;height:15px;">
+              <div><div style="font-weight:700; font-size:11px;">👥 Assemblea</div><div style="font-size:9px; color:var(--text-secondary);">Max 10h/anno</div></div>
+            </label>
             <label id="ts-tipo-sin-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
               <input type="radio" name="ts-abs-tipo" id="ts-tipo-sin" value="permessi_sindacali" style="width:15px;height:15px;">
-              <div><div style="font-weight:700; font-size:11px;">📢 Permesso Sindacale</div></div>
+              <div><div style="font-weight:700; font-size:11px;">📢 Permesso Sindacale</div><div style="font-size:9px; color:var(--text-secondary);">RSU / Dirigenti</div></div>
             </label>
           </div>
 
           <!-- Promemoria Informativi Dinamici per Tipologia -->
-          <div id="ts-malattia-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.3); border-radius:8px; padding:12px;">
-            ℹ️ <strong>Promemoria Malattia:</strong> Questa segnalazione serve per organizzare tempestivamente le supplenze. Il certificato telematico o numero di protocollo PUC va comunicato direttamente alla Segreteria del Personale secondo le consuete modalità.
+          <div id="ts-giornaliero-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:12px;">
+            🚫 <strong>Promemoria Permessi Giornalieri (Art. 15 CCNL):</strong> Spettano fino a 3 giorni retribuiti all'anno per motivi personali o familiari documentati anche mediante autocertificazione, senza obbligo di recupero né di sostituzione. Possono essere fruite con sostituti concordati a costo zero (Art. 13 c. 9) oppure per motivi personali/familiari senza obbligo di sostituti (Art. 15 c. 2).
           </div>
 
           <div id="ts-altro-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:12px;">
-            📄 <strong>Promemoria Altro Permesso:</strong> Max 3 all'anno, non soggetti a recupero. Per ulteriori informazioni chiedi al Referente.
-          </div>
-
-          <div id="ts-permesso-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:12px;">
-            ⏳ <strong>Promemoria Permessi Brevi (Art. 16 CCNL):</strong> Max 2 ore al giorno. Le ore sono soggette a recupero con supplenze entro 2 mesi lavorativi.
+            📄 <strong>Promemoria Altro Permesso:</strong> Possono essere richiesti fino a un massimo di 3 all'anno (fruibili a giornata intera o a singole ore) e non sono soggetti a recupero. Per ulteriori informazioni chiedi al Referente.
           </div>
 
           <div id="ts-ferie-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px;">
-            🏝️ <strong>Promemoria Ferie (Art. 15 c. 2):</strong> Max 6 giorni all'anno. È obbligatorio concordare la sostituzione a costo zero con i colleghi indicati sotto.
+            🏝️ <strong>Promemoria Ferie (Art. 13 c. 9 e Art. 15 c. 2 CCNL):</strong> <em>"Per gli stessi motivi e con le stesse modalità sono fruiti i sei giorni di ferie durante i periodi di svolgimento delle attività didattiche di cui all'art. 13, comma 9, prescindendo dalle condizioni previste in tale comma."</em><br><br>Questo significa che, una volta esauriti i primi 3 giorni (o anche direttamente), i 6 giorni di ferie possono essere fruiti esattamente come permessi per motivi personali senza l'obbligo di trovare colleghi sostituti! In totale il docente può fruire fino a 9 giorni annui per motivi personali/familiari.
           </div>
 
-          <div id="ts-formazione-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px;">
-            📚 <strong>Promemoria Formazione:</strong> Fino a 5 giorni annui con esonero dal servizio per aggiornamento e formazione accreditata.
+          <div id="ts-malattia-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.3); border-radius:8px; padding:12px;">
+            ℹ️ <strong>Promemoria Malattia:</strong> Questa segnalazione serve per organizzare tempestivamente le sostituzioni e il servizio a scuola. Il certificato telematico medico o il numero di protocollo PUC va comunicato direttamente alla Segreteria del Personale secondo le consuete modalità. Sia a giornata intera che a singole ore non genera debito né obbligo di recupero.
           </div>
 
-          <div id="ts-lutto-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(107,114,128,0.08); border:1px solid rgba(107,114,128,0.3); border-radius:8px; padding:12px;">
-            🕊️ <strong>Promemoria Lutto:</strong> 3 giorni per evento in caso di lutto per coniuge, conviventi o parenti entro il secondo grado.
+          <div id="ts-permesso-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:12px;">
+            ⏳ <strong>Promemoria Permessi Brevi (Art. 16 CCNL):</strong> Possono essere fruiti fino a un massimo di 2 ore al giorno, entro il limite complessivo del proprio orario settimanale di cattedra per anno scolastico (es. 18 ore). Le ore devono essere restituite mediante supplenze o interventi didattici entro 2 mesi lavorativi.
           </div>
 
-          <div id="ts-concorsi-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px;">
-            📝 <strong>Promemoria Concorsi:</strong> Fino a 8 giorni complessivi per partecipazione a concorsi o esami.
+          <div id="ts-studio-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(14,165,233,0.08); border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:12px;">
+            🎓 <strong>Promemoria Diritto allo Studio (150 ore):</strong> Fruibile fino a 150 ore solari annue per la frequenza di corsi universitari, TFA sostegno, percorsi abilitanti o esami, previa formale concessione con decreto dell'Ambito Territoriale (USP/USR). È richiesta la successiva attestazione di frequenza/esame rilasciata dall'ateneo o ente formatore.
           </div>
 
-          <div id="ts-matrimonio-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(236,72,153,0.08); border:1px solid rgba(236,72,153,0.3); border-radius:8px; padding:12px;">
-            💍 <strong>Promemoria Matrimonio:</strong> 15 giorni consecutivi per congedo matrimoniale.
+          <div id="ts-assemblea-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(100,116,139,0.08); border:1px solid rgba(100,116,139,0.3); border-radius:8px; padding:12px;">
+            👥 <strong>Promemoria Assemblee Sindacali (Art. 31 CCNL):</strong> Ciascun docente ha diritto a partecipare alle assemblee sindacali in orario di servizio fino a un massimo di 10 ore pro capite per anno scolastico (all'inizio o al termine delle lezioni), senza alcuna decurtazione stipendiale.
           </div>
 
           <div id="ts-sindacale-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px;">
-            📢 <strong>Promemoria Sindacale:</strong> Fino a 12 giorni/anno per attività o cariche sindacali previste da CCNL.
+            📢 <strong>Promemoria Permesso Sindacale (CCNQ):</strong> Fino a 12 giorni annui per la partecipazione ad attività, riunioni o assemblee sindacali previste dagli accordi quadro. (Riservato esclusivamente ai componenti della RSU d'istituto o ai dirigenti sindacali territoriali accreditati).
+          </div>
+
+          <div id="ts-formazione-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px;">
+            📚 <strong>Promemoria Formazione (Art. 36 CCNL):</strong> Fino a 5 giorni annui con esonero dal servizio per la partecipazione ad attività di aggiornamento e formazione professionale accreditata. Non cumulabili se si è contemporaneamente docenti e formatori.
+          </div>
+
+          <div id="ts-lutto-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(107,114,128,0.08); border:1px solid rgba(107,114,128,0.3); border-radius:8px; padding:12px;">
+            🕊️ <strong>Promemoria Lutto (Art. 15 c. 1 CCNL):</strong> 3 giorni continui per ogni singolo evento, in caso di lutto per coniuge, convivente more uxorio, parenti entro il secondo grado o affini di primo grado.
+          </div>
+
+          <div id="ts-concorsi-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px;">
+            📝 <strong>Promemoria Concorsi ed Esami (Art. 15 c. 1 CCNL):</strong> Fino a 8 giorni complessivi per anno scolastico per la partecipazione a concorsi pubblici o prove di esame, compresi gli eventuali giorni di viaggio necessari.
+          </div>
+
+          <div id="ts-matrimonio-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(236,72,153,0.08); border:1px solid rgba(236,72,153,0.3); border-radius:8px; padding:12px;">
+            💍 <strong>Promemoria Congedo Matrimoniale (Art. 15 c. 3 CCNL):</strong> 15 giorni consecutivi di congedo retribuito in occasione del matrimonio, fruibili da una settimana prima a due mesi successivi all'evento.
+          </div>
+
+          <div id="ts-uscita-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:12px;">
+            🚌 <strong>Promemoria Uscite e Soggiorni Didattici:</strong> Indica il referente, i colleghi accompagnatori e le classi coinvolte. I docenti in orario nelle stesse ore ma non impegnati nell'uscita verranno registrati a disposizione per coprire le supplenze.
           </div>
 
           <div class="form-group">
@@ -313,30 +354,36 @@ var TeacherSelfServiceView = (() => {
     const form = container.querySelector('#ts-absence-form');
     const tipoMalEl = container.querySelector('#ts-tipo-mal');
     const tipoMalOreEl = container.querySelector('#ts-tipo-mal-ore');
+    const tipoGenEl = container.querySelector('#ts-tipo-gen');
     const tipoAltEl = container.querySelector('#ts-tipo-alt');
     const tipoOraEl = container.querySelector('#ts-tipo-ora');
-    const tipoUscEl = container.querySelector('#ts-tipo-usc');
+    const tipoStuEl = container.querySelector('#ts-tipo-stu');
     const tipoFerEl = container.querySelector('#ts-tipo-fer');
+    const tipoUscEl = container.querySelector('#ts-tipo-usc');
     const tipoForEl = container.querySelector('#ts-tipo-for');
     const tipoConEl = container.querySelector('#ts-tipo-con');
     const tipoMatEl = container.querySelector('#ts-tipo-mat');
     const tipoLutEl = container.querySelector('#ts-tipo-lut');
+    const tipoAssEl = container.querySelector('#ts-tipo-ass');
     const tipoSinEl = container.querySelector('#ts-tipo-sin');
 
     const updateTipoStyle = () => {
       const isMal = tipoMalEl?.checked;
       const isMalOre = tipoMalOreEl?.checked;
+      const isGen = tipoGenEl?.checked;
       const isAlt = tipoAltEl?.checked;
       const isOra = tipoOraEl?.checked;
+      const isStu = tipoStuEl?.checked;
       const isUsc = tipoUscEl?.checked;
       const isFer = tipoFerEl?.checked;
       const isFor = tipoForEl?.checked;
       const isCon = tipoConEl?.checked;
       const isMat = tipoMatEl?.checked;
       const isLut = tipoLutEl?.checked;
+      const isAss = tipoAssEl?.checked;
       const isSin = tipoSinEl?.checked;
       
-      const ids = ['ts-tipo-mal','ts-tipo-mal-ore','ts-tipo-alt','ts-tipo-ora','ts-tipo-usc','ts-tipo-fer','ts-tipo-for','ts-tipo-con','ts-tipo-mat','ts-tipo-lut','ts-tipo-sin'];
+      const ids = ['ts-tipo-mal','ts-tipo-mal-ore','ts-tipo-gen','ts-tipo-alt','ts-tipo-ora','ts-tipo-stu','ts-tipo-fer','ts-tipo-usc','ts-tipo-for','ts-tipo-con','ts-tipo-mat','ts-tipo-lut','ts-tipo-ass','ts-tipo-sin'];
       ids.forEach(id => {
         const el = container.querySelector('#' + id);
         const lbl = container.querySelector('#' + id + '-lbl');
@@ -351,22 +398,26 @@ var TeacherSelfServiceView = (() => {
         if (el) el.style.display = show ? 'block' : 'none';
       };
 
-      setDisplay('ts-malattia-disclaimer', isMal || isMalOre);
+      setDisplay('ts-giornaliero-disclaimer', isGen);
       setDisplay('ts-altro-disclaimer', isAlt);
-      setDisplay('ts-permesso-disclaimer', isOra);
       setDisplay('ts-ferie-disclaimer', isFer);
+      setDisplay('ts-malattia-disclaimer', isMal || isMalOre);
+      setDisplay('ts-permesso-disclaimer', isOra);
+      setDisplay('ts-studio-disclaimer', isStu);
+      setDisplay('ts-assemblea-disclaimer', isAss);
+      setDisplay('ts-sindacale-disclaimer', isSin);
       setDisplay('ts-formazione-disclaimer', isFor);
       setDisplay('ts-lutto-disclaimer', isLut);
       setDisplay('ts-concorsi-disclaimer', isCon);
       setDisplay('ts-matrimonio-disclaimer', isMat);
-      setDisplay('ts-sindacale-disclaimer', isSin);
+      setDisplay('ts-uscita-disclaimer', isUsc);
 
-      container.querySelector('#hours-wrapper').style.display = (isMalOre || isOra || isUsc || isAlt) ? 'block' : 'none';
+      container.querySelector('#hours-wrapper').style.display = (isMalOre || isOra || isUsc || isAlt || isStu || isAss) ? 'block' : 'none';
       container.querySelector('#classes-wrapper').style.display = isUsc ? 'block' : 'none';
       container.querySelector('#accompanists-wrapper').style.display = isUsc ? 'block' : 'none';
       container.querySelector('#subs-wrapper').style.display = isFer ? 'block' : 'none';
       
-      const hideReason = isMal || isMalOre || isFer || isUsc || isFor || isCon || isSin || isMat || isLut;
+      const hideReason = isMal || isMalOre || isFer || isUsc || isFor || isCon || isSin || isMat || isLut || isAss;
       container.querySelector('#reason-wrapper').style.display = hideReason ? 'none' : 'block';
     };
 
@@ -412,7 +463,7 @@ var TeacherSelfServiceView = (() => {
       }
     };
 
-    [tipoMalEl, tipoMalOreEl, tipoAltEl, tipoOraEl, tipoUscEl, tipoFerEl, tipoForEl, tipoConEl, tipoMatEl, tipoLutEl, tipoSinEl].forEach(el => el?.addEventListener('change', () => {
+    [tipoMalEl, tipoMalOreEl, tipoGenEl, tipoAltEl, tipoOraEl, tipoStuEl, tipoUscEl, tipoFerEl, tipoForEl, tipoConEl, tipoMatEl, tipoLutEl, tipoAssEl, tipoSinEl].forEach(el => el?.addEventListener('change', () => {
       updateTipoStyle();
       if (tipoFerEl?.checked) updateFerieSubs();
     }));
@@ -461,7 +512,7 @@ var TeacherSelfServiceView = (() => {
 
     form.onsubmit = async (e) => {
       e.preventDefault();
-      const rawType = container.querySelector('input[name="ts-abs-tipo"]:checked')?.value || 'altro_permesso';
+      const rawType = container.querySelector('input[name="ts-abs-tipo"]:checked')?.value || 'assenza_giornaliera';
       const isMalOre = rawType === 'malattia_ore';
       const finalType = isMalOre ? 'malattia' : rawType;
 
@@ -475,10 +526,12 @@ var TeacherSelfServiceView = (() => {
         status: 'pending'
       };
 
-      if (isMalOre || payload.type === 'permesso_orario' || payload.type === 'uscita_didattica') {
+      if (isMalOre || payload.type === 'permesso_orario' || payload.type === 'uscita_didattica' || payload.type === 'diritto_studio' || payload.type === 'assemblea') {
         payload.hours = tsHours.getValue();
-        if (!payload.hours.length) return APP.toast('Seleziona le ore interessate', 'warning');
-      } else if (payload.type === 'altro_permesso') {
+        if (!payload.hours.length && (isMalOre || payload.type === 'permesso_orario' || payload.type === 'uscita_didattica')) {
+          return APP.toast('Seleziona le ore interessate', 'warning');
+        }
+      } else if (payload.type === 'altro_permesso' || payload.type === 'assenza_giornaliera') {
         const h = tsHours.getValue();
         if (h && h.length) payload.hours = h;
       }
@@ -489,7 +542,7 @@ var TeacherSelfServiceView = (() => {
           if (sel.value) subs[sel.dataset.hour] = parseInt(sel.value);
         });
         payload.additional_data = { substitutes_identified: subs };
-        if (Object.keys(subs).length === 0) return APP.toast('Indica i sostituti', 'warning');
+        // Le ferie ex art 15 c 2 possono essere concesse anche senza sostituti se per motivi personali
       }
       try {
         await API.post('/absences', payload);
