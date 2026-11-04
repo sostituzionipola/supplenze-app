@@ -87,17 +87,25 @@ var TeacherSelfServiceView = (() => {
       const teacherAbs = (myAbsences || []).filter(a => a.teacher_id == _teacherId && a.status !== 'rejected');
       
       let shortPermitHours = 0;
-      let medVisitsCount = 0;
-      let medVisitsHours = 0;
+      let malattiaDays = 0;
+      let altroPermessoCount = 0;
 
       teacherAbs.forEach(a => {
         const type = (a.type || '').toLowerCase();
         const hoursCount = a.hours_count ? parseInt(a.hours_count) : (a.hours && Array.isArray(a.hours) ? a.hours.length : 1);
         if (type === 'permesso_orario' || type === 'permit_hour' || type === 'permesso_breve' || type === 'permesso_ora') {
           shortPermitHours += hoursCount;
-        } else if (type === 'visita_medica' || type === 'medical_visit' || type === 'visita') {
-          medVisitsCount++;
-          medVisitsHours += hoursCount;
+        } else if (type === 'malattia') {
+          if (a.date_end && a.date_end !== a.date) {
+            const d1 = new Date(a.date);
+            const d2 = new Date(a.date_end);
+            const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+            malattiaDays += Math.max(1, diffDays);
+          } else {
+            malattiaDays += 1;
+          }
+        } else if (type === 'altro_permesso' || type === 'assenza_giornaliera' || type === 'motivi_personali') {
+          altroPermessoCount++;
         }
       });
 
@@ -107,9 +115,10 @@ var TeacherSelfServiceView = (() => {
       });
 
       const s = {
+        malattia: malattiaDays,
+        altro_permesso: stats.permessi_giornalieri || altroPermessoCount || 0,
         ferie: stats.ferie || 0,
         formazione: stats.formazione || 0,
-        permessi_giornalieri: stats.permessi_giornalieri || 0,
         concorsi: stats.concorsi || 0,
         matrimonio: stats.matrimonio || 0,
         lutto: stats.lutto || luttoCount || 0,
@@ -118,10 +127,10 @@ var TeacherSelfServiceView = (() => {
       };
 
       container.querySelector('#ts-stats-bar').innerHTML = `
-        <div class="badge badge-info" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">🏝️ Ferie: <strong>${s.ferie}/6</strong></div>
-        <div class="badge badge-success" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">👥 Permessi Giornalieri: <strong>${s.permessi_giornalieri}/3</strong></div>
+        <div class="badge badge-error" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">🤒 Malattia: <strong>${s.malattia} gg</strong></div>
+        <div class="badge badge-success" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">📄 Altri Permessi: <strong>${s.altro_permesso}/3</strong></div>
         <div class="badge badge-warning" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">⏳ Permessi Brevi: <strong>${shortPermitHours}/${weeklyH} h</strong></div>
-        <div class="badge badge-primary" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">🩺 Visite Mediche: <strong>${medVisitsCount} req</strong> <span style="font-size:10px; opacity:0.8">(${medVisitsHours}h tot)</span></div>
+        <div class="badge badge-info" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">🏝️ Ferie: <strong>${s.ferie}/6</strong></div>
         <div class="badge badge-secondary" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">📚 Formazione: <strong>${s.formazione}/5</strong></div>
         <div class="badge badge-secondary" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">📝 Concorsi: <strong>${s.concorsi}/8</strong></div>
         <div class="badge badge-neutral" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">💍 Matrimonio: <strong>${s.matrimonio}/15</strong></div>
@@ -183,17 +192,13 @@ var TeacherSelfServiceView = (() => {
               <input type="radio" name="ts-abs-tipo" id="ts-tipo-mal" value="malattia" style="width:15px;height:15px;">
               <div><div style="font-weight:700; font-size:11px;">🤒 Malattia</div><div style="font-size:9px; color:var(--text-secondary);">Intera giornata</div></div>
             </label>
-            <label id="ts-tipo-gen-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--accent); background:var(--accent-light);">
-              <input type="radio" name="ts-abs-tipo" id="ts-tipo-gen" value="assenza_giornaliera" checked style="width:15px;height:15px;">
-              <div><div style="font-weight:700; font-size:11px;">🚫 Permessi Giornalieri</div><div style="font-size:9px; color:var(--text-secondary);">Max 3gg/anno</div></div>
+            <label id="ts-tipo-alt-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--accent); background:var(--accent-light);">
+              <input type="radio" name="ts-abs-tipo" id="ts-tipo-alt" value="altro_permesso" checked style="width:15px;height:15px;">
+              <div><div style="font-weight:700; font-size:11px;">📄 Altro Permesso</div><div style="font-size:9px; color:var(--text-secondary);">Max 3gg/anno (non rec.)</div></div>
             </label>
             <label id="ts-tipo-ora-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
               <input type="radio" name="ts-abs-tipo" id="ts-tipo-ora" value="permesso_orario" style="width:15px;height:15px;">
-              <div><div style="font-weight:700; font-size:11px;">⏳ Permessi Brevi</div><div style="font-size:9px; color:var(--text-secondary);">Singole ore</div></div>
-            </label>
-            <label id="ts-tipo-vis-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
-              <input type="radio" name="ts-abs-tipo" id="ts-tipo-vis" value="visita_medica" style="width:15px;height:15px;">
-              <div><div style="font-weight:700; font-size:11px;">🩺 Visita Medica</div><div style="font-size:9px; color:var(--text-secondary);">A ore (rec. 2 mesi)</div></div>
+              <div><div style="font-weight:700; font-size:11px;">⏳ Permessi Brevi</div><div style="font-size:9px; color:var(--text-secondary);">Singole ore (con debito)</div></div>
             </label>
             <label id="ts-tipo-usc-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
               <input type="radio" name="ts-abs-tipo" id="ts-tipo-usc" value="uscita_didattica" style="width:15px;height:15px;">
@@ -229,8 +234,10 @@ var TeacherSelfServiceView = (() => {
             ℹ️ <strong>Promemoria Malattia:</strong> Questa segnalazione serve per organizzare tempestivamente le supplenze. Il certificato telematico o numero di protocollo PUC va comunicato direttamente alla Segreteria del Personale secondo le consuete modalità.
           </div>
 
-          <div id="ts-visita-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:12px;">
-            🩺 <strong>Visite Mediche a Ore (Art. 16 CCNL):</strong> Le ore di visita medica sono soggette a recupero tramite supplenze entro 2 mesi lavorativi. Se la visita è a giornata intera, seleziona <em>"Malattia"</em> o <em>"Permessi Giornalieri"</em>.
+          <div id="ts-altro-mode-wrapper" style="display:none; margin-bottom:14px; padding:10px 14px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; gap:16px;">
+            <span style="font-size:11px; font-weight:700;">Fruizione Altro Permesso:</span>
+            <label style="font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;"><input type="radio" name="ts-altro-mode" id="ts-altro-mode-day" value="giornata" checked> 📅 Intera Giornata</label>
+            <label style="font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;"><input type="radio" name="ts-altro-mode" id="ts-altro-mode-hour" value="ore"> ⏰ Singole Ore (senza debito)</label>
           </div>
 
           <div class="form-group">
@@ -271,9 +278,8 @@ var TeacherSelfServiceView = (() => {
 
     const form = container.querySelector('#ts-absence-form');
     const tipoMalEl = container.querySelector('#ts-tipo-mal');
-    const tipoGenEl = container.querySelector('#ts-tipo-gen');
+    const tipoAltEl = container.querySelector('#ts-tipo-alt');
     const tipoOraEl = container.querySelector('#ts-tipo-ora');
-    const tipoVisEl = container.querySelector('#ts-tipo-vis');
     const tipoUscEl = container.querySelector('#ts-tipo-usc');
     const tipoFerEl = container.querySelector('#ts-tipo-fer');
     const tipoForEl = container.querySelector('#ts-tipo-for');
@@ -284,12 +290,14 @@ var TeacherSelfServiceView = (() => {
 
     const updateTipoStyle = () => {
       const isMal = tipoMalEl?.checked;
+      const isAlt = tipoAltEl?.checked;
       const isOra = tipoOraEl?.checked;
-      const isVis = tipoVisEl?.checked;
       const isUsc = tipoUscEl?.checked;
       const isFer = tipoFerEl?.checked;
+      const altroMode = container.querySelector('input[name="ts-altro-mode"]:checked')?.value || 'giornata';
+      const isAltroOre = isAlt && altroMode === 'ore';
       
-      const ids = ['ts-tipo-mal','ts-tipo-gen','ts-tipo-ora','ts-tipo-vis','ts-tipo-usc','ts-tipo-fer','ts-tipo-for','ts-tipo-con','ts-tipo-mat','ts-tipo-lut','ts-tipo-sin'];
+      const ids = ['ts-tipo-mal','ts-tipo-alt','ts-tipo-ora','ts-tipo-usc','ts-tipo-fer','ts-tipo-for','ts-tipo-con','ts-tipo-mat','ts-tipo-lut','ts-tipo-sin'];
       ids.forEach(id => {
         const el = container.querySelector('#' + id);
         const lbl = container.querySelector('#' + id + '-lbl');
@@ -300,9 +308,10 @@ var TeacherSelfServiceView = (() => {
       });
 
       container.querySelector('#ts-malattia-disclaimer').style.display = isMal ? 'block' : 'none';
-      container.querySelector('#ts-visita-disclaimer').style.display = isVis ? 'block' : 'none';
+      const altroWrapper = container.querySelector('#ts-altro-mode-wrapper');
+      if (altroWrapper) altroWrapper.style.display = isAlt ? 'flex' : 'none';
 
-      container.querySelector('#hours-wrapper').style.display = (isOra || isVis || isUsc) ? 'block' : 'none';
+      container.querySelector('#hours-wrapper').style.display = (isOra || isUsc || isAltroOre) ? 'block' : 'none';
       container.querySelector('#classes-wrapper').style.display = isUsc ? 'block' : 'none';
       container.querySelector('#accompanists-wrapper').style.display = isUsc ? 'block' : 'none';
       container.querySelector('#subs-wrapper').style.display = isFer ? 'block' : 'none';
@@ -310,6 +319,8 @@ var TeacherSelfServiceView = (() => {
       const hideReason = isMal || isFer || isUsc || tipoForEl?.checked || tipoConEl?.checked || tipoSinEl?.checked || tipoMatEl?.checked || tipoLutEl?.checked;
       container.querySelector('#reason-wrapper').style.display = hideReason ? 'none' : 'block';
     };
+
+    container.querySelectorAll('input[name="ts-altro-mode"]').forEach(r => r.addEventListener('change', updateTipoStyle));
 
     const subsContainer = container.querySelector('#ts-ferie-subs-container');
     const updateFerieSubs = async () => {
@@ -411,9 +422,11 @@ var TeacherSelfServiceView = (() => {
         reason: container.querySelector('#abs-reason')?.value || '',
         status: 'pending'
       };
-      if (payload.type === 'permesso_orario' || payload.type === 'visita_medica' || payload.type === 'uscita_didattica') {
+      const isAltro = payload.type === 'altro_permesso';
+      const altroMode = container.querySelector('input[name="ts-altro-mode"]:checked')?.value || 'giornata';
+      if (payload.type === 'permesso_orario' || payload.type === 'uscita_didattica' || (isAltro && altroMode === 'ore')) {
         payload.hours = tsHours.getValue();
-        if (!payload.hours.length) return APP.toast('Seleziona le ore', 'warning');
+        if (!payload.hours.length) return APP.toast('Seleziona le ore interessate', 'warning');
       }
       if (payload.type === 'ferie') {
         const subs = {};
@@ -742,8 +755,7 @@ async function renderOre(container, state) {
     const initialTrips = parseInt(_teacher?.hours_trips) || 0;
     
     let shortPermitHours = 0;
-    let medVisitsCount = 0;
-    let medVisitsHours = 0;
+    let altroPermessoCount = 0;
     const now = new Date();
 
     // Dettaglio assenze
@@ -773,7 +785,7 @@ async function renderOre(container, state) {
       });
     }
 
-    // 3. Permessi e Visite
+    // 3. Permessi Brevi
     myAbsences.sort((a,b) => (a.date||'').localeCompare(b.date||'')).forEach(a => {
       const type = (a.type || '').toLowerCase();
       const hoursCount = a.hours_count ? parseInt(a.hours_count) : (a.hours && Array.isArray(a.hours) ? a.hours.length : 1);
@@ -792,21 +804,8 @@ async function renderOre(container, state) {
           isExpired: isExpired,
           type: 'permit_hour'
         });
-      } else if (type === 'visita_medica' || type === 'medical_visit' || type === 'visita') {
-        medVisitsCount++;
-        medVisitsHours += hoursCount;
-        const dAssenza = new Date(a.date);
-        const deadline = new Date(dAssenza);
-        deadline.setDate(deadline.getDate() + 60);
-        const isExpired = deadline < now;
-        registryItems.push({
-          date: fmtDate(a.date),
-          title: `🩺 Visita Medica #${medVisitsCount} (${hoursCount}h)`,
-          hours: hoursCount,
-          deadline: `${fmtDate(deadline.toISOString().slice(0,10))} (2 mesi)`,
-          isExpired: isExpired,
-          type: 'visita_medica'
-        });
+      } else if (type === 'altro_permesso' || type === 'assenza_giornaliera' || type === 'motivi_personali') {
+        altroPermessoCount++;
       }
     });
 
@@ -824,7 +823,7 @@ async function renderOre(container, state) {
       else subsDone++;
     });
 
-    const saldoSubs = initialSubs + shortPermitHours + medVisitsHours - subsDone;
+    const saldoSubs = initialSubs + shortPermitHours - subsDone;
     const saldoTrips = initialTrips - tripsDone;
 
     const rowsHtml = mySubs.map(s => {
@@ -850,7 +849,7 @@ async function renderOre(container, state) {
             ${saldoSubs > 0 ? saldoSubs + ' h' : (saldoSubs === 0 ? '0 h (In pari)' : '+' + Math.abs(saldoSubs) + ' h (Credito)')}
           </div>
           <div style="font-size:11px; color:var(--text-secondary); line-height:1.4;">
-            Iniziale: <strong>${initialSubs}h</strong> | Permessi: <strong>${shortPermitHours}h</strong> | Visite mediche: <strong>${medVisitsHours}h</strong>
+            Iniziale: <strong>${initialSubs}h</strong> | Permessi Brevi: <strong>${shortPermitHours}h</strong> | Svolte: <strong>${subsDone}h</strong>
           </div>
         </div>
 
@@ -868,17 +867,17 @@ async function renderOre(container, state) {
           </div>
         </div>
 
-        <!-- Card 3: Visite Mediche -->
-        <div class="stat-card" style="background:#fdf2f8; border:1px solid #fbcfe8; padding:16px; border-radius:10px;">
+        <!-- Card 3: Altri Permessi -->
+        <div class="stat-card" style="background:#fdf4ff; border:1px solid #f0abfc; padding:16px; border-radius:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:13px; font-weight:700; color:#be185d;">🩺 VISITE MEDICHE</div>
-            <span class="badge" style="background:#fce7f3; color:#be185d; border:1px solid #fbcfe8;">${medVisitsCount} req</span>
+            <div style="font-size:13px; font-weight:700; color:#a21caf;">📄 ALTRI PERMESSI</div>
+            <span class="badge" style="background:#fae8ff; color:#a21caf; border:1px solid #f0abfc;">Max 3/anno</span>
           </div>
-          <div style="font-size:26px; font-weight:800; color:#be185d; margin:8px 0 4px 0;">
-            ${medVisitsHours} h tot
+          <div style="font-size:26px; font-weight:800; color:#a21caf; margin:8px 0 4px 0;">
+            ${altroPermessoCount} / 3
           </div>
           <div style="font-size:11px; color:var(--text-secondary); line-height:1.4;">
-            Ore a recupero entro 2 mesi (Art. 16 CCNL)
+            Permessi retribuiti fruiti (non a debito)
           </div>
         </div>
       </div>
@@ -999,31 +998,26 @@ async function generateDocument(container) {
     const initialTrips = parseInt(_teacher?.hours_trips) || 0;
     
     let shortPermitHours = 0;
-    let medVisitsCount = 0;
-    let medDebtHours = 0;
 
     myAbsences.forEach(a => {
       const type = (a.type || '').toLowerCase();
       const hoursCount = a.hours_count ? parseInt(a.hours_count) : (a.hours && Array.isArray(a.hours) ? a.hours.length : 1);
       if (type === 'permesso_orario' || type === 'permit_hour' || type === 'permesso_breve') {
         shortPermitHours += hoursCount;
-      } else if (type === 'visita_medica' || type === 'medical_visit' || type === 'visita') {
-        medVisitsCount++;
-        if (medVisitsCount > 3) medDebtHours += hoursCount;
       }
     });
 
     const totalRec = mySubs.filter(s => s.hours_counted).length;
     const totalEcc = mySubs.filter(s => !s.hours_counted).length;
-    const saldoSubs = initialSubs + shortPermitHours + medDebtHours - totalRec;
+    const saldoSubs = initialSubs + shortPermitHours - totalRec;
 
     const allHours = [8,9,10,11,12,13,14,15];
     let body = '';
 
     if (sections.riepilogo) {
       body += `<h2>📊 Riepilogo Debiti e Ore</h2>
-        <table><tr><th>Debito Iniziale Supplenze</th><th>Permessi Brevi Presi</th><th>Visite Mediche (>3)</th><th>Supplenze Recuperate</th><th>Saldo Residuo</th><th>Debito Uscite</th></tr>
-        <tr><td>${initialSubs} h</td><td>${shortPermitHours} h</td><td>${medDebtHours} h</td><td>${totalRec} h</td><td><strong>${saldoSubs} h</strong></td><td>${initialTrips} h</td></tr></table>`;
+        <table><tr><th>Debito Iniziale Supplenze</th><th>Permessi Brevi Presi</th><th>Supplenze Recuperate</th><th>Saldo Residuo</th><th>Debito Uscite</th></tr>
+        <tr><td>${initialSubs} h</td><td>${shortPermitHours} h</td><td>${totalRec} h</td><td><strong>${saldoSubs} h</strong></td><td>${initialTrips} h</td></tr></table>`;
     }
     if (sections.storico) {
       body += `<h2>📋 Storico Sostituzioni/Recuperi</h2>
@@ -1186,9 +1180,8 @@ async function generateDocument(container) {
           <label style="font-weight:600; font-size:12px;">Tipo Assenza *</label>
           <select id="reg-abs-type" class="form-control">
             <option value="malattia">🤒 Malattia (Intera giornata)</option>
-            <option value="assenza_giornaliera">🚫 Permesso Giornaliero (Max 3gg/anno)</option>
+            <option value="altro_permesso">📄 Altro Permesso (Max 3gg/anno - non rec.)</option>
             <option value="permesso_orario">⏳ Permesso Breve (Singole ore da recuperare)</option>
-            <option value="visita_medica">🩺 Visita Medica (Da recuperare entro 2 mesi)</option>
             <option value="formazione">📚 Formazione / Aggiornamento</option>
             <option value="lutto">🕊️ Permesso per Lutto</option>
             <option value="motivi_personali">👨‍👩‍👧 Motivi Personali / Familiari</option>

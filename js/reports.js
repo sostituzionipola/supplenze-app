@@ -206,21 +206,16 @@ var ReportsView = (() => {
         const initialSubs = parseInt(t.hours_subs) || 0;
         
         let shortPermitHours = 0;
-        let medVisitsCount = 0;
-        let medDebtHours = 0;
 
         (absences || []).filter(a => a.teacher_id == t.id && a.status !== 'rejected').forEach(a => {
           const type = (a.type || '').toLowerCase();
           const hoursCount = a.hours_count ? parseInt(a.hours_count) : (a.hours && Array.isArray(a.hours) ? a.hours.length : 1);
           if (type === 'permesso_orario' || type === 'permit_hour' || type === 'permesso_breve') {
             shortPermitHours += hoursCount;
-          } else if (type === 'visita_medica' || type === 'medical_visit' || type === 'visita') {
-            medVisitsCount++;
-            medDebtHours += hoursCount;
           }
         });
 
-        const totalDebt = initialSubs + shortPermitHours + medDebtHours;
+        const totalDebt = initialSubs + shortPermitHours;
         const extra = Math.max(0, done - totalDebt);
         return { ...t, extra, done, totalDebt, initialSubs };
       }).filter(t => t.extra > 0).sort((a,b) => b.extra - a.extra);

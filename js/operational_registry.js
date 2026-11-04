@@ -462,13 +462,17 @@ var OperationalRegistryView = (() => {
           <input type="radio" name="abs-tipo" id="tipo-rapido" value="da_regolarizzare" checked style="width:16px;height:16px;">
           <div><div style="font-weight:700; font-size:13px;">⚡ Assenza Rapida</div><div style="font-size:11px; color:var(--text-secondary);">Da regolarizzare dopo (Giorno intero)</div></div>
         </label>
-        <label id="tipo-giornaliero-lbl" style="display:flex; align-items:center; gap:10px; padding:14px 16px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
-          <input type="radio" name="abs-tipo" id="tipo-giornaliero" value="assenza_giornaliera" style="width:16px;height:16px;">
-          <div><div style="font-weight:700; font-size:13px;">🚫 Permesso Giornaliero</div><div style="font-size:11px; color:var(--text-secondary);">Giorno intero</div></div>
+        <label id="tipo-malattia-lbl" style="display:flex; align-items:center; gap:10px; padding:14px 16px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
+          <input type="radio" name="abs-tipo" id="tipo-malattia" value="malattia" style="width:16px;height:16px;">
+          <div><div style="font-weight:700; font-size:13px;">🤒 Malattia</div><div style="font-size:11px; color:var(--text-secondary);">Giorno intero (Certificato)</div></div>
+        </label>
+        <label id="tipo-altro-lbl" style="display:flex; align-items:center; gap:10px; padding:14px 16px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
+          <input type="radio" name="abs-tipo" id="tipo-altro" value="altro_permesso" style="width:16px;height:16px;">
+          <div><div style="font-weight:700; font-size:13px;">📄 Altro Permesso</div><div style="font-size:11px; color:var(--text-secondary);">Max 3gg/anno (Non rec.)</div></div>
         </label>
         <label id="tipo-orario-lbl" style="display:flex; align-items:center; gap:10px; padding:14px 16px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
           <input type="radio" name="abs-tipo" id="tipo-orario" value="permesso_orario" style="width:16px;height:16px;">
-          <div><div style="font-weight:700; font-size:13px;">⏳ Permesso Orario</div><div style="font-size:11px; color:var(--text-secondary);">Singole ore</div></div>
+          <div><div style="font-weight:700; font-size:13px;">⏳ Permesso Breve</div><div style="font-size:11px; color:var(--text-secondary);">Singole ore (Da rec.)</div></div>
         </label>
         <label id="tipo-uscita-lbl" style="display:flex; align-items:center; gap:10px; padding:14px 16px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
           <input type="radio" name="abs-tipo" id="tipo-uscita" value="uscita" style="width:16px;height:16px;">
@@ -562,7 +566,8 @@ var OperationalRegistryView = (() => {
     });
 
     const tipoRapido = ov.querySelector('#tipo-rapido');
-    const tipoGiornaliero = ov.querySelector('#tipo-giornaliero');
+    const tipoMalattia = ov.querySelector('#tipo-malattia');
+    const tipoAltro = ov.querySelector('#tipo-altro');
     const tipoOrario = ov.querySelector('#tipo-orario');
     const tipoUscita = ov.querySelector('#tipo-uscita');
     const tipoFerie = ov.querySelector('#tipo-ferie');
@@ -574,7 +579,8 @@ var OperationalRegistryView = (() => {
     const tipoAssemblea = ov.querySelector('#tipo-assemblea');
 
     const rapLbl = ov.querySelector('#tipo-rapido-lbl');
-    const gioLbl = ov.querySelector('#tipo-giornaliero-lbl');
+    const malLbl = ov.querySelector('#tipo-malattia-lbl');
+    const altLbl = ov.querySelector('#tipo-altro-lbl');
     const oraLbl = ov.querySelector('#tipo-orario-lbl');
     const uscLbl = ov.querySelector('#tipo-uscita-lbl');
     const ferLbl = ov.querySelector('#tipo-ferie-lbl');
@@ -640,22 +646,29 @@ var OperationalRegistryView = (() => {
     });
 
     const updateTipo = () => {
-      const isRap = tipoRapido.checked;
-      const isGio = tipoGiornaliero.checked;
-      const isOra = tipoOrario.checked;
-      const isUsc = tipoUscita.checked;
-      const isFer = tipoFerie.checked;
-      const isFor = tipoFormazione.checked;
-      const isCon = tipoConcorsi.checked;
-      const isMat = tipoMatrimonio.checked;
-      const isLut = tipoLutto.checked;
-      const isSin = tipoSindacali.checked;
-      const isAss = tipoAssemblea.checked;
+      const isRap = tipoRapido?.checked;
+      const isMal = tipoMalattia?.checked;
+      const isAlt = tipoAltro?.checked;
+      const isOra = tipoOrario?.checked;
+      const isUsc = tipoUscita?.checked;
+      const isFer = tipoFerie?.checked;
+      const isFor = tipoFormazione?.checked;
+      const isCon = tipoConcorsi?.checked;
+      const isMat = tipoMatrimonio?.checked;
+      const isLut = tipoLutto?.checked;
+      const isSin = tipoSindacali?.checked;
+      const isAss = tipoAssemblea?.checked;
       
       rapLbl.style.borderColor = isRap ? 'var(--accent)' : 'var(--border)';
       rapLbl.style.background  = isRap ? 'var(--accent-light)' : 'var(--bg-secondary)';
-      gioLbl.style.borderColor = isGio ? 'var(--accent)' : 'var(--border)';
-      gioLbl.style.background  = isGio ? 'var(--accent-light)' : 'var(--bg-secondary)';
+      if (malLbl) {
+        malLbl.style.borderColor = isMal ? 'var(--accent)' : 'var(--border)';
+        malLbl.style.background  = isMal ? 'var(--accent-light)' : 'var(--bg-secondary)';
+      }
+      if (altLbl) {
+        altLbl.style.borderColor = isAlt ? 'var(--accent)' : 'var(--border)';
+        altLbl.style.background  = isAlt ? 'var(--accent-light)' : 'var(--bg-secondary)';
+      }
       oraLbl.style.borderColor = isOra ? 'var(--accent)' : 'var(--border)';
       oraLbl.style.background  = isOra ? 'var(--accent-light)' : 'var(--bg-secondary)';
       uscLbl.style.borderColor = isUsc ? 'var(--accent)' : 'var(--border)';
@@ -687,7 +700,8 @@ var OperationalRegistryView = (() => {
     };
 
     tipoRapido.onchange = updateTipo;
-    tipoGiornaliero.onchange = updateTipo;
+    if (tipoMalattia) tipoMalattia.onchange = updateTipo;
+    if (tipoAltro) tipoAltro.onchange = updateTipo;
     tipoOrario.onchange = updateTipo;
     tipoUscita.onchange = updateTipo;
     tipoFerie.onchange = updateTipo;
@@ -836,7 +850,7 @@ var OperationalRegistryView = (() => {
           }
 
           const isRapido = tipoRapido.checked;
-          const absType = isRapido ? 'da_regolarizzare' : (isFerie ? 'ferie' : (tipoFormazione.checked ? 'formazione' : (tipoConcorsi.checked ? 'concorsi_esami' : (tipoMatrimonio.checked ? 'matrimonio' : (tipoLutto.checked ? 'lutto' : (tipoSindacali.checked ? 'permessi_sindacali' : (tipoAssemblea.checked ? 'assemblea' : (tipoOrario.checked ? 'permesso_orario' : 'assenza_giornaliera'))))))));
+          const absType = isRapido ? 'da_regolarizzare' : (tipoMalattia?.checked ? 'malattia' : (tipoAltro?.checked ? 'altro_permesso' : (tipoOrario?.checked ? 'permesso_orario' : (isFerie ? 'ferie' : (tipoFormazione.checked ? 'formazione' : (tipoConcorsi.checked ? 'concorsi_esami' : (tipoMatrimonio.checked ? 'matrimonio' : (tipoLutto.checked ? 'lutto' : (tipoSindacali.checked ? 'permessi_sindacali' : (tipoAssemblea.checked ? 'assemblea' : 'altro_permesso'))))))))));
           
           const payload = {
             teacher_id: tIds,

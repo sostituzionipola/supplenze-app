@@ -486,9 +486,7 @@ var TeachersView = (() => {
           initial_subs: parseInt(t.hours_subs) || 0,
           initial_trips: parseInt(t.hours_trips) || 0,
           short_permits_hours: 0,
-          med_requests: 0,
-          med_exempt_hours: 0,
-          med_debt_hours: 0,
+          altro_permesso_count: 0,
           subs_done: 0,
           trips_done: 0,
           rejected_subs_count: 0,
@@ -496,7 +494,7 @@ var TeachersView = (() => {
         };
       });
 
-      // Calcola assenze per docente (Permessi brevi e visite mediche)
+      // Calcola assenze per docente (Permessi brevi e altri permessi)
       const tAbsences = {};
       (absences || []).forEach(a => {
         if (!a.teacher_id || !teacherStats[a.teacher_id]) return;
@@ -513,19 +511,14 @@ var TeachersView = (() => {
           const type = (a.type || '').toLowerCase();
           const hoursCount = a.hours_count ? parseInt(a.hours_count) : (a.hours && Array.isArray(a.hours) ? a.hours.length : 1);
           
-          if (type === 'permit_hour' || type === 'permesso_breve' || type === 'permesso_ora') {
+          if (type === 'permit_hour' || type === 'permesso_breve' || type === 'permesso_ora' || type === 'permesso_orario') {
             stats.short_permits_hours += hoursCount;
             if (a.date) {
               const diffDays = Math.floor((now - new Date(a.date)) / (1000 * 60 * 60 * 24));
               if (diffDays > 60) stats.expired_permits_hours += hoursCount;
             }
-          } else if (type === 'visita_medica' || type === 'medical_visit' || type === 'visita') {
-            stats.med_requests++;
-            stats.med_debt_hours += hoursCount;
-            if (a.date) {
-              const diffDays = Math.floor((now - new Date(a.date)) / (1000 * 60 * 60 * 24));
-              if (diffDays > 60) stats.expired_permits_hours += hoursCount;
-            }
+          } else if (type === 'altro_permesso' || type === 'assenza_giornaliera' || type === 'motivi_personali') {
+            stats.altro_permesso_count++;
           }
         });
       });
@@ -561,7 +554,7 @@ var TeachersView = (() => {
                   <th style="text-align:center;">Cattedra</th>
                   <th style="text-align:center;">Debito Iniziale</th>
                   <th style="text-align:center;">Permessi Brevi</th>
-                  <th style="text-align:center;">Visite Mediche</th>
+                  <th style="text-align:center;">Altri Permessi (Max 3)</th>
                   <th style="text-align:center; color:var(--success-text);">Supplenze Svolte</th>
                   <th style="text-align:center; color:var(--danger-text, #ef4444);">Rifiuti</th>
                   <th style="text-align:center; font-weight:700;">SALDO RESIDUO</th>
@@ -570,7 +563,7 @@ var TeachersView = (() => {
               </thead>
               <tbody>
                 ${Object.values(teacherStats).sort((a,b)=>a.name.localeCompare(b.name)).map(s => {
-                  const saldo = s.initial_subs + s.short_permits_hours + s.med_debt_hours - s.subs_done;
+                  const saldo = s.initial_subs + s.short_permits_hours - s.subs_done;
                   const hasExpired = s.expired_permits_hours > s.subs_done;
                   return `
                   <tr style="border-bottom:1px solid var(--border)">
@@ -579,7 +572,7 @@ var TeachersView = (() => {
                     <td style="text-align:center;"><span class="badge badge-neutral">${s.weekly_hours}h</span></td>
                     <td style="text-align:center; font-weight:600;">${s.initial_subs} h</td>
                     <td style="text-align:center;">${s.short_permits_hours} h</td>
-                    <td style="text-align:center;">${s.med_debt_hours} h <span style="font-size:10px; color:var(--text-secondary)">(${s.med_requests} req)</span></td>
+                    <td style="text-align:center;">${s.altro_permesso_count} / 3 <span style="font-size:10px; color:var(--text-secondary)">(non rec.)</span></td>
                     <td style="text-align:center; font-weight:700; color:var(--success-text);">${s.subs_done} h</td>
                     <td style="text-align:center; font-weight:600; color:${s.rejected_subs_count > 0 ? '#ef4444' : 'var(--text-muted)'};">${s.rejected_subs_count > 0 ? `${s.rejected_subs_count} ❌` : '—'}</td>
                     <td style="text-align:center; font-weight:800; font-size:13px; color:${saldo > 0 ? 'var(--warning-text, #d97706)' : 'var(--success-text, #16a34a)'}">${saldo > 0 ? saldo + ' h' : (saldo === 0 ? '0 h' : '+' + Math.abs(saldo) + ' h (Credito)')}</td>

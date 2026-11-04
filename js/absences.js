@@ -235,9 +235,8 @@ var AbsencesView = (() => {
           <label style="font-weight:600; font-size:12px;">Tipo Assenza Definitivo *</label>
           <select id="bulk-abs-type" class="form-control">
             <option value="malattia">🤒 Malattia (Intera giornata)</option>
-            <option value="assenza_giornaliera">🚫 Permesso Giornaliero (Max 3gg/anno)</option>
+            <option value="altro_permesso">📄 Altro Permesso (Max 3gg/anno - non rec.)</option>
             <option value="permesso_orario">⏳ Permesso Breve (Singole ore da recuperare)</option>
-            <option value="visita_medica">🩺 Visita Medica (Da recuperare entro 2 mesi)</option>
             <option value="formazione">📚 Formazione / Aggiornamento</option>
             <option value="lutto">🕊️ Permesso per Lutto</option>
             <option value="motivi_personali">👨‍👩‍👧 Motivi Personali / Familiari</option>
@@ -330,9 +329,8 @@ var AbsencesView = (() => {
         <div class="form-group"><label>Tipo Assenza *</label>
           <select id="ab-type" class="form-control">
             <option value="malattia">🤒 Malattia (Intera giornata)</option>
-            <option value="assenza_giornaliera">🚫 Permessi Giornalieri (Max 3gg/anno)</option>
-            <option value="permesso_orario">⏳ Permessi Brevi (Singole ore)</option>
-            <option value="visita_medica">🩺 Visita Medica (A ore - rec. 2 mesi)</option>
+            <option value="altro_permesso">📄 Altro Permesso (Max 3gg/anno - non rec.)</option>
+            <option value="permesso_orario">⏳ Permessi Brevi (Singole ore da rec.)</option>
             <option value="ferie">🏝️ Ferie</option>
             <option value="formazione">📚 Formazione</option>
             <option value="permessi_sindacali">📢 Permessi Sindacali</option>
