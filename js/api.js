@@ -127,6 +127,14 @@ const API = (() => {
       if (path.includes('/hours') && method === 'PATCH') return await Engine.adjustHours(path.split('/')[2], data.delta, data.type);
 
       // --- SCHEDULE ---
+      if (path.startsWith('/schedule/clear') && method === 'DELETE') {
+        const sp = new URLSearchParams(path.split('?')[1]);
+        return await Engine.clearSchedule(sp.get('year_id'), sp.get('type') || 'all');
+      }
+      if (path.startsWith('/schedule/all') && method === 'DELETE') {
+        const sp = new URLSearchParams(path.split('?')[1]);
+        return await Engine.clearSchedule(sp.get('year_id'), 'all');
+      }
       if (path.startsWith('/schedule') && method === 'GET') {
         const sp = new URLSearchParams(path.split('?')[1]);
         return Engine.getSchedule(sp.get('year_id'), sp.get('teacher_id'));

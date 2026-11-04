@@ -26,7 +26,21 @@ var OrganigrammaView = (() => {
     return _docData;
   }
 
+  async function deleteData() {
+    _docData = null;
+    localStorage.removeItem('sg_organigramma');
+    try {
+      if (typeof firebase !== 'undefined' && firebase.firestore) {
+        await firebase.firestore().collection('system').doc('organigramma').delete();
+      }
+    } catch(e) {
+      console.error('[ORGANIGRAMMA] Errore eliminazione cloud:', e);
+      throw e;
+    }
+  }
+
   async function saveData(data) {
+    if (!data) return deleteData();
     _docData = data;
     localStorage.setItem('sg_organigramma', JSON.stringify(data));
     try {
@@ -179,5 +193,6 @@ var OrganigrammaView = (() => {
     }
   }
 
-  return { render };
+  return { render, loadData, saveData, deleteData };
 })();
+

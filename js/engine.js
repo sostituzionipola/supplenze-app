@@ -557,6 +557,62 @@ const Engine = (() => {
       });
     },
 
+    clearSchedule: async (yearId, type = 'all') => {
+      const yid = Number(yearId);
+      const currentDb = _getActiveDb();
+      
+      const matchesType = (slot) => {
+        if (!type || type === 'all') return true;
+        const raw = (slot.raw_value || '').toUpperCase().trim();
+        const st = slot.slot_type;
+        if (type === 'ricevimento' || type === 'R') {
+          return st === 'ricevimento' || raw === 'R';
+        }
+        if (type === 'disponibile' || type === 'DIS') {
+          return st === 'disponibile' || raw === 'DIS';
+        }
+        if (type === 'eccedente' || type === 'ECC') {
+          return st === 'eccedente' || raw === 'ECC';
+        }
+        return false;
+      };
+
+      if (isSandboxActive()) {
+        const sDb = _getActiveDb();
+        sDb.schedule = sDb.schedule.filter(s => {
+          if (Number(s.school_year_id) !== yid && String(s.school_year_id) !== String(yearId)) return true;
+          return !matchesType(s);
+        });
+        _saveSandbox(sDb);
+        return { ok: true };
+      }
+
+      const snap = await db.collection('schedule').get();
+      const batch = db.batch();
+      let count = 0;
+      
+      snap.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.school_year_id == yearId || data.school_year_id == yid) {
+          if (matchesType(data)) {
+            batch.delete(doc.ref);
+            count++;
+          }
+        }
+      });
+
+      if (count > 0) {
+        await batch.commit();
+      }
+
+      currentDb.schedule = currentDb.schedule.filter(s => {
+        if (Number(s.school_year_id) !== yid && String(s.school_year_id) !== String(yearId)) return true;
+        return !matchesType(s);
+      });
+
+      return { ok: true, deleted: count };
+    },
+
     // ── ASSENZE ──
     getAbsences: (date, yearId) => {
       const currentDb = _getActiveDb();

@@ -103,59 +103,45 @@ var ScheduleView = (() => {
     return `${cNomi}.${cCognomi}@padregemelli.net`;
   }
 
-  function showImportModal(state, cb) {
+  function showImportModal(state, cb, defaultType = 'orario') {
+    let title = 'Importa Orario Docenti';
+    let hint = 'Usa <strong>DIS</strong> per disponibilità, <strong>ECC</strong> per eccedenze o <strong>R</strong> per ricevimenti.';
+    if (defaultType === 'ricevimento' || defaultType === 'R') {
+      title = 'Importa Ore di Ricevimento (R)';
+      hint = 'Inserisci <strong>R</strong> nelle celle corrispondenti all\'ora di ricevimento dei docenti.';
+    } else if (defaultType === 'dis' || defaultType === 'DIS') {
+      title = 'Importa Ore a Disposizione (DIS)';
+      hint = 'Inserisci <strong>DIS</strong> nelle celle in cui il docente è a disposizione per supplenze.';
+    } else if (defaultType === 'ecc' || defaultType === 'ECC') {
+      title = 'Importa Ore Eccedenti (ECC)';
+      hint = 'Inserisci <strong>ECC</strong> nelle celle corrispondenti alle ore eccedenti cattedra.';
+    }
+
     const body = `
       <div class="p-12" style="max-width:100%;">
         <p style="font-size:13px; margin-bottom:12px">
-          Carica un file <strong>Excel (.xlsx, .xls)</strong> o <strong>CSV</strong> in formato <strong>Matrice</strong>.<br/>
+          Carica un file <strong>Excel (.xlsx, .xls)</strong> o <strong>CSV</strong> compilato con il template ufficiale.<br/>
           La prima riga contiene i <strong>GIORNI</strong>, la seconda le <strong>ORE</strong>.<br/>
-          Colonne anagrafiche richieste: <strong>MATERIA</strong>, <strong>COGNOMI</strong>, <strong>NOMI</strong>.<br/>
-          Usa <strong>DIS</strong> per disponibilità e <strong>ECC</strong> per eccedenze.
+          Colonne richieste: <strong>MATERIA</strong>, <strong>COGNOMI</strong>, <strong>NOMI</strong>.<br/>
+          ${hint}
         </p>
-        <div style="background:#1e293b; border:1px solid #334155; border-radius:6px; overflow-x:auto; -webkit-overflow-scrolling:touch; max-width:100%; margin-bottom:16px;">
-          <table style="width:100%; min-width:420px; font-size:10px; text-align:center; border-collapse:collapse; color:#f8fafc;">
-            <thead>
-              <tr style="background:#0f172a; border-bottom:1px solid #334155;">
-                <th style="padding:4px 8px; border-right:1px solid #334155;">MATERIA</th>
-                <th style="padding:4px 8px; border-right:1px solid #334155;">COGNOMI</th>
-                <th style="padding:4px 8px; border-right:1px solid #334155;">NOMI</th>
-                <th colspan="2" style="padding:4px 8px; border-right:1px solid #334155;">LUNEDI</th>
-              </tr>
-              <tr style="background:#0f172a; border-bottom:1px solid #334155;">
-                <th style="border-right:1px solid #334155;"></th>
-                <th style="border-right:1px solid #334155;"></th>
-                <th style="border-right:1px solid #334155;"></th>
-                <th style="padding:4px; border-right:1px solid #334155; font-weight:400; color:#94a3b8;">8ª</th>
-                <th style="padding:4px; font-weight:400; color:#94a3b8;">9ª</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style="padding:4px 8px; text-align:left; color:#818cf8;">ARTE</td>
-                <td style="padding:4px 8px; text-align:left; font-weight:700;">NERI</td>
-                <td style="padding:4px 8px; text-align:left; font-weight:700;">ELENA</td>
-                <td style="padding:4px; border-right:1px solid #334155;">1D</td>
-                <td style="padding:4px; color:#4ade80; font-weight:700;">DIS</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
         <div class="import-dropzone" id="dropzone" style="border: 2px dashed var(--border); padding: 24px 16px; text-align: center; border-radius: 8px; cursor: pointer; background: var(--bg-secondary)">
           <div style="font-size:32px; margin-bottom:8px">📄</div>
           <div>Trascina il file qui o clicca per selezionare</div>
           <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none">
         </div>
         <div style="display:flex; justify-content:center; gap:8px; margin-top:16px; flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm" onclick="ScheduleView.downloadTemplate()">📥 Scarica Template</button>
-          <button class="btn btn-ghost btn-sm" style="color:#ef4444;" onclick="ImportExportView.clearSchedule('${state.yearId}')">🗑️ Svuota e Ricomincia</button>
+          <button class="btn btn-secondary btn-sm" id="btn-modal-tmpl">📥 Scarica Template Specifico (.xlsx)</button>
         </div>
         <div id="import-status" style="margin-top:12px; font-size:12px"></div>
       </div>
     `;
-    const ov = APP.modal({ title: 'Importa Orario Docenti', body, footer: `<button class="btn btn-ghost" id="m-imp-close">Chiudi</button>` });
+    const ov = APP.modal({ title, body, footer: `<button class="btn btn-ghost" id="m-imp-close">Chiudi</button>` });
     const dz = ov.querySelector('#dropzone');
     const fi = ov.querySelector('#file-input');
     const status = ov.querySelector('#import-status');
+    const tmplBtn = ov.querySelector('#btn-modal-tmpl');
+    if (tmplBtn) tmplBtn.onclick = () => downloadTemplate(defaultType);
     dz.onclick = () => fi.click();
     fi.onchange = (e) => handleFile(e.target.files[0], state, status, cb);
     ov.querySelector('#m-imp-close').onclick = () => ov.remove();
@@ -261,8 +247,8 @@ var ScheduleView = (() => {
     reader.readAsArrayBuffer(file);
   }
 
-  function downloadTemplate() {
-    // Genera un file Excel (.xlsx) ad alta fedeltà con Cognomi, Nomi e orario istituzionale
+  function downloadTemplate(type = 'orario') {
+    // Genera un file Excel (.xlsx) ad alta fedeltà con Materia, Cognomi, Nomi e orario istituzionale
     const days = ['LUNEDI', 'MARTEDI', 'MERCOLEDI', 'GIOVEDI', 'VENERDI'];
     const data = [
       ['MATERIA', 'COGNOMI', 'NOMI'], // Riga 1: Intestazioni / Giorni
@@ -270,12 +256,30 @@ var ScheduleView = (() => {
       ['ESEMPIO MATERIA', 'ROSSI BIANCHI', 'MARIA GRAZIA'] // Riga 3: Esempio
     ];
 
+    let sampleVal = '1A';
+    let fileName = 'template_orario_istituto.xlsx';
+    let sheetName = 'Template Orario';
+
+    if (type === 'ricevimento' || type === 'R') {
+      sampleVal = 'R';
+      fileName = 'template_ricevimenti_istituto.xlsx';
+      sheetName = 'Template Ricevimenti';
+    } else if (type === 'dis' || type === 'DIS') {
+      sampleVal = 'DIS';
+      fileName = 'template_disponibilita_dis.xlsx';
+      sheetName = 'Template DIS';
+    } else if (type === 'ecc' || type === 'ECC') {
+      sampleVal = 'ECC';
+      fileName = 'template_ore_eccedenti_ecc.xlsx';
+      sheetName = 'Template ECC';
+    }
+
     days.forEach(d => {
       const hours = HOURS_BY_DAY[d] || [8,9,10,11,12,13,14,15];
       hours.forEach((h, idx) => {
         data[0].push(idx === 0 ? d : ''); // Il nome del giorno appare solo alla prima ora
         data[1].push(h + 'ª');
-        data[2].push(idx === 0 ? '1A' : ''); // Suggerimento nel sample
+        data[2].push(idx === 0 ? sampleVal : ''); // Suggerimento nel sample
       });
     });
 
@@ -284,9 +288,9 @@ var ScheduleView = (() => {
       // Impostiamo larghezza colonne minima per leggibilità
       ws['!cols'] = [{ wch: 18 }, { wch: 22 }, { wch: 20 }]; 
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Template Orario");
-      XLSX.writeFile(wb, "template_orario_istituto.xlsx");
-      APP.toast('Template Excel generato con successo', 'success');
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      XLSX.writeFile(wb, fileName);
+      APP.toast(`Template ${sheetName} generato con successo`, 'success');
     } catch(e) {
       console.error('Errore generazione Excel:', e);
       // Fallback CSV se XLSX fallisce per qualche motivo
@@ -294,7 +298,7 @@ var ScheduleView = (() => {
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = 'template_orario_istituto.csv';
+      a.href = url; a.download = fileName.replace('.xlsx', '.csv');
       a.click();
     }
   }
