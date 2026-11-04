@@ -272,11 +272,18 @@ var TeacherSelfServiceView = (() => {
           </div>
 
           <div id="ts-ferie-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px;">
-            🏝️ <strong>Promemoria Ferie (Art. 13 c. 9 e Art. 15 c. 2 CCNL):</strong> <em>"Per gli stessi motivi e con le stesse modalità sono fruiti i sei giorni di ferie durante i periodi di svolgimento delle attività didattiche di cui all'art. 13, comma 9, prescindendo dalle condizioni previste in tale comma."</em><br><br>Questo significa che, una volta esauriti i primi 3 giorni (o anche direttamente), i 6 giorni di ferie possono essere fruiti esattamente come permessi per motivi personali senza l'obbligo di trovare colleghi sostituti! In totale il docente può fruire fino a 9 giorni annui per motivi personali/familiari.
+            🏝️ <strong>Promemoria Ferie durante le lezioni (CCNL):</strong> Le ferie possono essere fruite secondo due modalità:<br>
+            • <strong>Con sostituti concordati (Art. 13 c. 9):</strong> fruibili durante i periodi di svolgimento delle lezioni a condizione che sia possibile sostituire il personale senza oneri aggiuntivi per l'amministrazione (seleziona i colleghi concordati nel riquadro sottostante).<br>
+            • <strong>Senza obbligo di sostituti (Art. 15 c. 2):</strong> <em>"Per gli stessi motivi e con le stesse modalità sono fruiti i sei giorni di ferie durante i periodi di svolgimento delle attività didattiche di cui all'art. 13, comma 9, prescindendo dalle condizioni previste in tale comma."</em> Una volta esauriti i primi 3 giorni di permesso (o anche direttamente), fino a 6 giorni di ferie possono essere fruiti esattamente come permessi per motivi personali/familiari senza obbligo di reperire sostituti (fino a un totale di 9 giorni annui).<br>
+            <em>Per ulteriori informazioni rivolgersi al Referente.</em>
           </div>
 
           <div id="ts-malattia-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.3); border-radius:8px; padding:12px;">
-            ℹ️ <strong>Promemoria Malattia:</strong> Questa segnalazione serve per organizzare tempestivamente le sostituzioni e il servizio a scuola. Il certificato telematico medico o il numero di protocollo PUC va comunicato direttamente alla Segreteria del Personale secondo le consuete modalità. Sia a giornata intera che a singole ore non genera debito né obbligo di recupero.
+            ℹ️ <strong>Promemoria Malattia:</strong> Questa segnalazione serve per organizzare tempestivamente le supplenze. Il certificato telematico o numero di protocollo PUC va comunicato direttamente alla Segreteria del Personale secondo le consuete modalità.
+          </div>
+
+          <div id="ts-malattia-ore-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.3); border-radius:8px; padding:12px;">
+            🩺 <strong>Promemoria Malattia a Ore:</strong> Da utilizzare per assenze parziali nella giornata (es. uscita anticipata per malessere improvviso o prestazioni sanitarie a ore). Seleziona le ore di assenza nel campo sottostante. L'attestazione medica o giustificativo va trasmesso alla Segreteria del Personale. Non è soggetta a recupero con supplenze. Per ulteriori informazioni rivolgersi al Referente.
           </div>
 
           <div id="ts-permesso-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:12px;">
@@ -288,7 +295,7 @@ var TeacherSelfServiceView = (() => {
           </div>
 
           <div id="ts-assemblea-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(100,116,139,0.08); border:1px solid rgba(100,116,139,0.3); border-radius:8px; padding:12px;">
-            👥 <strong>Promemoria Assemblee Sindacali (Art. 31 CCNL):</strong> Ciascun docente ha diritto a partecipare alle assemblee sindacali in orario di servizio fino a un massimo di 10 ore pro capite per anno scolastico (all'inizio o al termine delle lezioni), senza alcuna decurtazione stipendiale.
+            👥 <strong>Promemoria Assemblee Sindacali (Art. 31 CCNL):</strong> Ciascun docente ha diritto a partecipare ad assemblee sindacali in orario di servizio fino a un massimo di 10 ore pro capite per anno scolastico (posizionate all'inizio o al termine delle lezioni della giornata), senza alcuna decurtazione stipendiale. La dichiarazione individuale va comunicata con congruo preavviso (almeno 48/72 ore prima) e vanno selezionate le ore specifiche nel campo sottostante per consentire l'adeguamento dell'orario scolastico e la comunicazione alle famiglie.
           </div>
 
           <div id="ts-sindacale-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px;">
@@ -401,7 +408,8 @@ var TeacherSelfServiceView = (() => {
       setDisplay('ts-giornaliero-disclaimer', isGen);
       setDisplay('ts-altro-disclaimer', isAlt);
       setDisplay('ts-ferie-disclaimer', isFer);
-      setDisplay('ts-malattia-disclaimer', isMal || isMalOre);
+      setDisplay('ts-malattia-disclaimer', isMal);
+      setDisplay('ts-malattia-ore-disclaimer', isMalOre);
       setDisplay('ts-permesso-disclaimer', isOra);
       setDisplay('ts-studio-disclaimer', isStu);
       setDisplay('ts-assemblea-disclaimer', isAss);
