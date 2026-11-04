@@ -196,7 +196,7 @@ var OperationalRegistryView = (() => {
           <table class="reg-columnar-table" style="width:100%; border-collapse: separate; border-spacing: 0; min-width: 1100px;">
             <thead style="position: sticky; top: 0; z-index: 90;">
               <tr>
-                <th style="width:5%; background: var(--bg-card); border-bottom: 2px solid var(--border-thick); border-right: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Ora</th>
+                <th class="reg-sticky-hour" style="width:5%; background: var(--bg-card); border-bottom: 2px solid var(--border-thick); border-right: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Ora</th>
                 <th style="width:20%; background: var(--bg-card); border-bottom: 2px solid var(--border-thick); border-right: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Docente Assente</th>
                 <th style="width:5%; background: var(--bg-card); border-bottom: 2px solid var(--border-thick); border-right: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Classe</th>
                 <th style="width:14%; background: var(--bg-secondary); border-bottom: 2px solid var(--border-thick); border-right: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">In Compresenza</th>
@@ -237,7 +237,7 @@ var OperationalRegistryView = (() => {
 
             html += `
               <tr class="${slot ? 'reg-row-absence' : 'reg-row-empty'} ${isFirstOfBlock ? 'reg-row-start-block' : ''} ${(hourLabel % 2 !== 0) ? 'hour-band-odd' : 'hour-band-even'}">
-                <td style="border-right: 2px solid var(--border-thick); border-bottom: 2px solid var(--border-thick); text-align:center; vertical-align:middle;">${hourBadgeHtml}</td>
+                <td class="reg-sticky-hour" style="border-right: 2px solid var(--border-thick); border-bottom: 2px solid var(--border-thick); text-align:center; vertical-align:middle;">${hourBadgeHtml}</td>
                 ${slot ? `
                 <td style="border-right: 4px solid var(--accent); border-bottom: 2px solid var(--border-thick);">
                   <div class="flex items-center justify-between gap-8">

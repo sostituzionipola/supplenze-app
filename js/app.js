@@ -835,25 +835,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const sidebar = document.querySelector('.sidebar');
   const toggle = document.getElementById('mobile-toggle-btn');
   const closeBtn = document.getElementById('sidebar-close-btn');
+  const backdrop = document.getElementById('sidebar-backdrop');
+
+  function closeMobileSidebar() {
+    sidebar?.classList.remove('open');
+    backdrop?.classList.remove('active');
+  }
 
   if (toggle && sidebar) {
     toggle.onclick = (e) => {
       e.stopPropagation();
-      if (window.innerWidth <= 1024) sidebar.classList.toggle('open');
-      else sidebar.classList.toggle('collapsed');
+      if (window.innerWidth <= 1024) {
+        sidebar.classList.toggle('open');
+        backdrop?.classList.toggle('active', sidebar.classList.contains('open'));
+      } else {
+        sidebar.classList.toggle('collapsed');
+      }
     };
   }
 
-  if (closeBtn && sidebar) {
-    closeBtn.onclick = () => sidebar.classList.remove('open');
-  }
+  if (closeBtn) closeBtn.onclick = closeMobileSidebar;
+  if (backdrop) backdrop.onclick = closeMobileSidebar;
 
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
       const v = item.dataset.view;
       if (v) {
         APP.navigate(v);
-        if (window.innerWidth <= 1024) sidebar?.classList.remove('open');
+        if (window.innerWidth <= 1024) closeMobileSidebar();
       }
     });
   });
@@ -863,15 +872,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sidebar Legal & Info Links
   document.getElementById('nav-privacy')?.addEventListener('click', () => {
     APP.showPrivacyModal();
-    if (window.innerWidth <= 1024) sidebar?.classList.remove('open');
+    if (window.innerWidth <= 1024) closeMobileSidebar();
   });
   document.getElementById('nav-terms')?.addEventListener('click', () => {
     APP.showTermsModal();
-    if (window.innerWidth <= 1024) sidebar?.classList.remove('open');
+    if (window.innerWidth <= 1024) closeMobileSidebar();
   });
   document.getElementById('nav-instr-teacher')?.addEventListener('click', () => {
     APP.showTeacherManual();
-    if (window.innerWidth <= 1024) sidebar?.classList.remove('open');
+    if (window.innerWidth <= 1024) closeMobileSidebar();
   });
   document.getElementById('nav-instr-admin')?.addEventListener('click', () => {
     APP.showAdminManual();
