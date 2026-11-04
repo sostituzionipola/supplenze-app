@@ -166,6 +166,7 @@ var TeacherSelfServiceView = (() => {
 
 
   async function renderNotifiche(container, state) {
+    if (!container) return;
     container.innerHTML = `
       <div class="card mb-20">
         <div class="card-header border-b mb-16">
@@ -197,6 +198,7 @@ var TeacherSelfServiceView = (() => {
   }
 
   async function renderSegnala(container, state) {
+    if (!container) return;
     container.innerHTML = `
       <div class="card mb-20" style="border:2px solid var(--accent);">
         <div class="card-header border-b mb-16">
@@ -619,6 +621,7 @@ var TeacherSelfServiceView = (() => {
   // ─── TAB 2: IL MIO ORARIO ───────────────────────────────────────────────────
 
   async function renderOrario(container, state) {
+    if (!container) return;
     container.innerHTML = `
       <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" id="ts-show-personal">📋 Il Mio Orario Personale</button>
@@ -857,6 +860,7 @@ target.innerHTML = '<div class="empty-state">Errore caricamento orario completo.
 // ─── TAB 3: LE MIE ORE ─────────────────────────────────────────────────────
 
 async function renderOre(container, state) {
+  if (!container) return;
   container.innerHTML = '<div class="loading-overlay"><div class="spinner"></div> Caricamento ore...</div>';
   try {
     const [history, absences] = await Promise.all([
@@ -1057,6 +1061,7 @@ async function renderOre(container, state) {
 // ─── TAB 4: ESPORTA ─────────────────────────────────────────────────────────
 
 async function renderEsporta(container, state) {
+  if (!container) return;
   container.innerHTML = `
     <div class="card" style="padding:24px; max-width:600px;">
       <div style="font-size:15px; font-weight:700; margin-bottom:6px;">📄 Scegli cosa includere nel documento</div>
