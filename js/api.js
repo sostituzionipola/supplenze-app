@@ -171,6 +171,8 @@ const API = (() => {
       
       // --- LONG TERM ASSIGNMENTS ---
       if (path === '/long-term-assignments' && method === 'GET') return Engine.getLongTermAssignments();
+      if (path === '/long-term-assignments' && method === 'POST') return await Engine.addLongTermAssignment(data);
+      if (path.startsWith('/long-term-assignments/') && method === 'DELETE') return await Engine.deleteLongTermAssignment(path.split('/')[2]);
       
       // --- EVENTS ---
       if (path.startsWith('/events') && method === 'GET') {

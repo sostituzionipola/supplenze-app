@@ -113,8 +113,12 @@ const APP = (() => {
   function printAbsence(a) {
     const win = window.open('', '_blank');
     const typeLabel = {
-      assenza_giornaliera: 'Assenza Giornaliera',
+      malattia: 'Malattia',
+      malattia_ore: 'Malattia a Ore',
+      assenza_giornaliera: 'Permesso Giornaliero',
+      altro_permesso: 'Altro Permesso',
       permesso_orario: 'Permesso Orario',
+      diritto_studio: 'Diritto allo Studio',
       uscita_didattica: 'Uscita / Soggiorno Didattico',
       ferie: 'Ferie',
       formazione: 'Formazione',

@@ -930,6 +930,10 @@ const Engine = (() => {
       const slots = [];
       absToday.forEach(abs => {
         hours.forEach(h => {
+          if (abs.hours && Array.isArray(abs.hours) && abs.hours.length > 0) {
+            const matches = abs.hours.some(x => Number(x) === Number(h) || Number(x) === Number(h) - 7);
+            if (!matches) return;
+          }
           const slot = currentDb.schedule.find(s => 
             s.teacher_id == abs.teacher_id && 
             s.day == dayOfWeek && 
@@ -958,7 +962,34 @@ const Engine = (() => {
     },
 
     // ── ASSEGNAZIONI LUNGO TERMINE ──
-    getLongTermAssignments: () => _getActiveDb().long_term_assignments,
+    getLongTermAssignments: () => _getActiveDb().long_term_assignments || [],
+    addLongTermAssignment: async (item) => {
+      const id = String(Date.now() + Math.random());
+      const newItem = { ...item, id, created_at: new Date().toISOString() };
+      if (isSandboxActive()) {
+        const sDb = _getActiveDb();
+        sDb.long_term_assignments = sDb.long_term_assignments || [];
+        sDb.long_term_assignments.push(newItem);
+        _saveSandbox(sDb);
+        return newItem;
+      }
+      await db.collection('long_term_assignments').doc(id).set(newItem);
+      const curDb = _getActiveDb();
+      curDb.long_term_assignments = curDb.long_term_assignments || [];
+      curDb.long_term_assignments.push(newItem);
+      return newItem;
+    },
+    deleteLongTermAssignment: async (id) => {
+      if (isSandboxActive()) {
+        const sDb = _getActiveDb();
+        sDb.long_term_assignments = (sDb.long_term_assignments || []).filter(x => x.id != id);
+        _saveSandbox(sDb);
+        return;
+      }
+      await db.collection('long_term_assignments').doc(String(id)).delete();
+      const curDb = _getActiveDb();
+      curDb.long_term_assignments = (curDb.long_term_assignments || []).filter(x => x.id != id);
+    },
 
     // ── EVENTI SCOLASTICI ──
     getEvents: (yearId) => {

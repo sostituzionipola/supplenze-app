@@ -356,7 +356,24 @@ var TeachersView = (() => {
               <div class="form-group"><label>Inizio Nomina</label><input type="date" id="m-start-date" class="form-control"></div>
               <div class="form-group"><label>Fine Nomina</label><input type="date" id="m-end-date" class="form-control"></div>
             </div>
-            <p style="font-size:10px; color:var(--text-secondary); margin:0;">Il supplente erediterà automaticamente l'orario del titolare scelto per il periodo indicato.</p>
+            <div class="form-group" style="margin-top:10px;">
+              <label>Copertura Oraria Nomina</label>
+              <select id="m-lt-coverage" class="form-control">
+                <option value="full">Intera cattedra (tutte le ore del titolare)</option>
+                <option value="partial">Spezzone / Solo ore specifiche</option>
+              </select>
+            </div>
+            <div id="m-lt-hours-box" style="display:none; margin-top:8px; padding:10px; background:var(--bg-primary); border-radius:6px; border:1px solid var(--border);">
+              <label style="font-size:11px; text-transform:none; margin-bottom:6px;">Seleziona le ore assegnate (1ª - 8ª):</label>
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">
+                ${[1,2,3,4,5,6,7,8].map(h => `
+                  <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;">
+                    <input type="checkbox" class="m-lt-hour-cb" value="${h+7}"> ${h}ª ora
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+            <p style="font-size:10px; color:var(--text-secondary); margin-top:8px; margin-bottom:0;">Il supplente verrà suggerito automaticamente per le ore del titolare nel periodo indicato.</p>
           </div>
 
           <div class="grid grid-cols-2 gap-12 mt-16">
@@ -389,9 +406,14 @@ var TeachersView = (() => {
 
     const mType = ov.querySelector('#m-type');
     const tdExt = ov.querySelector('#m-td-extension');
+    const covSel = ov.querySelector('#m-lt-coverage');
+    const covBox = ov.querySelector('#m-lt-hours-box');
 
     mType.addEventListener('change', (e) => {
        tdExt.style.display = e.target.value === 'long_term' ? 'block' : 'none';
+    });
+    covSel?.addEventListener('change', (e) => {
+      if (covBox) covBox.style.display = e.target.value === 'partial' ? 'block' : 'none';
     });
 
     ov.querySelector('#m-save').onclick = async () => {
@@ -439,12 +461,16 @@ var TeachersView = (() => {
           
           // Se è TD, creiamo anche la nomina
           if (type === 'long_term' && replacedId) {
+            let ltHours = [];
+            if (ov.querySelector('#m-lt-coverage')?.value === 'partial') {
+              ltHours = Array.from(ov.querySelectorAll('.m-lt-hour-cb:checked')).map(cb => parseInt(cb.value));
+            }
             await API.post('/long-term-assignments', {
               substitute_id: savedTeacher.id,
               replaced_id: replacedId,
               start_date: startDate,
               end_date: endDate,
-              hours: []
+              hours: ltHours
             });
             APP.toast('Docente e Nomina creati con successo', 'success');
           }
@@ -1186,30 +1212,56 @@ var TeachersView = (() => {
             <div class="form-group"><label>Dal</label><input type="date" id="lt-from" class="form-control"></div>
             <div class="form-group"><label>Al</label><input type="date" id="lt-to" class="form-control"></div>
           </div>
+          <div class="form-group mt-8">
+            <label>Copertura Oraria Nomina</label>
+            <select id="lt-coverage" class="form-control">
+              <option value="full">Intera cattedra (tutte le ore del titolare)</option>
+              <option value="partial">Spezzone / Solo ore specifiche</option>
+            </select>
+          </div>
+          <div id="lt-hours-box" style="display:none; margin-top:8px; margin-bottom:12px; padding:10px; background:var(--bg-secondary); border-radius:6px; border:1px solid var(--border);">
+            <label style="font-size:11px; text-transform:none; margin-bottom:6px;">Seleziona le ore assegnate (1ª - 8ª):</label>
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">
+              ${[1,2,3,4,5,6,7,8].map(h => `
+                <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;">
+                  <input type="checkbox" class="lt-hour-cb" value="${h+7}"> ${h}ª ora
+                </label>
+              `).join('')}
+            </div>
+          </div>
           <button class="btn btn-primary btn-sm" id="lt-add-btn" style="width:100%">Crea Nomina</button>
         </div>
 
         <strong>Nomine Attive:</strong>
         <div class="table-wrapper" style="max-height:220px; overflow-y:auto; margin-top:8px">
           <table style="font-size:11px">
-            <thead><tr><th>Supplente</th><th>Sostituisce</th><th>Periodo</th><th></th></tr></thead>
+            <thead><tr><th>Supplente</th><th>Sostituisce</th><th>Periodo</th><th>Copertura</th><th></th></tr></thead>
             <tbody>
               ${items.map(it => {
                 const sub = teachers.find(t=>t.id==it.substitute_id);
                 const rep = teachers.find(t=>t.id==it.replaced_id);
+                const covLabel = (it.hours && it.hours.length)
+                  ? it.hours.map(h => (h > 7 ? h - 7 : h) + 'ª').join(', ')
+                  : '<span class="badge badge-neutral" style="font-size:10px;">Intera cattedra</span>';
                 return `<tr>
                   <td>${escHtml(sub?.name||'?')}</td>
                   <td>${escHtml(rep?.name||'?')}</td>
                   <td>${fmtDate(it.start_date)} - ${fmtDate(it.end_date)}</td>
+                  <td>${covLabel}</td>
                   <td><button class="btn btn-ghost btn-sm" onclick="TeachersView.deleteLongTerm('${it.id}', true)">🗑️</button></td>
                 </tr>`;
               }).join('')}
-              ${items.length===0?'<tr><td colspan="4" style="text-align:center">Nessun supplente nominato</td></tr>':''}
+              ${items.length===0?'<tr><td colspan="5" style="text-align:center">Nessun supplente nominato</td></tr>':''}
             </tbody>
           </table>
         </div>
 
       `;
+
+      container.querySelector('#lt-coverage')?.addEventListener('change', (e) => {
+        const box = container.querySelector('#lt-hours-box');
+        if (box) box.style.display = e.target.value === 'partial' ? 'block' : 'none';
+      });
 
       container.querySelector('#lt-add-btn').onclick = async () => {
         const subName = container.querySelector('#lt-sub-name').value.trim().toUpperCase();
@@ -1219,6 +1271,15 @@ var TeachersView = (() => {
 
         if (!subName || !replacedId || !startDate || !endDate) {
           APP.toast('Compila tutti i campi', 'warning'); return;
+        }
+
+        let assignedHours = [];
+        if (container.querySelector('#lt-coverage')?.value === 'partial') {
+          assignedHours = Array.from(container.querySelectorAll('.lt-hour-cb:checked')).map(cb => parseInt(cb.value));
+          if (!assignedHours.length) {
+            APP.toast('Seleziona almeno un\'ora per lo spezzone', 'warning');
+            return;
+          }
         }
 
         try {
@@ -1241,7 +1302,7 @@ var TeachersView = (() => {
             replaced_id: replacedId,
             start_date: startDate,
             end_date: endDate,
-            hours: []
+            hours: assignedHours
           });
 
           APP.toast('Nomina creata correttamente', 'success');
