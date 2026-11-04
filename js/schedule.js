@@ -89,23 +89,40 @@ var ScheduleView = (() => {
     loadMasterGrid();
   }
 
+  function generateTeacherEmail(nomi, cognomi) {
+    function clean(str) {
+      return (str || '')
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/['’]/g, '')
+        .replace(/[^a-z0-9]/g, '');
+    }
+    const cNomi = clean(nomi);
+    const cCognomi = clean(cognomi);
+    if (!cNomi || !cCognomi) return '';
+    return `${cNomi}.${cCognomi}@padregemelli.net`;
+  }
+
   function showImportModal(state, cb) {
     const body = `
-      <div class="p-12">
+      <div class="p-12" style="max-width:100%;">
         <p style="font-size:13px; margin-bottom:12px">
           Carica un file <strong>Excel (.xlsx, .xls)</strong> o <strong>CSV</strong> in formato <strong>Matrice</strong>.<br/>
-          La prima riga deve contenere i <strong>GIORNI</strong> (LUNEDI, ecc.), la seconda le <strong>ORE</strong> (8ª, 9ª).<br/>
+          La prima riga contiene i <strong>GIORNI</strong>, la seconda le <strong>ORE</strong>.<br/>
+          Colonne anagrafiche richieste: <strong>MATERIA</strong>, <strong>COGNOMI</strong>, <strong>NOMI</strong>.<br/>
           Usa <strong>DIS</strong> per disponibilità e <strong>ECC</strong> per eccedenze.
         </p>
-        <div style="background:#1e293b; border:1px solid #334155; border-radius:6px; overflow:hidden; margin-bottom:16px;">
-          <table style="width:100%; font-size:10px; text-align:center; border-collapse:collapse; color:#f8fafc;">
+        <div style="background:#1e293b; border:1px solid #334155; border-radius:6px; overflow-x:auto; -webkit-overflow-scrolling:touch; max-width:100%; margin-bottom:16px;">
+          <table style="width:100%; min-width:420px; font-size:10px; text-align:center; border-collapse:collapse; color:#f8fafc;">
             <thead>
               <tr style="background:#0f172a; border-bottom:1px solid #334155;">
                 <th style="padding:4px 8px; border-right:1px solid #334155;">MATERIA</th>
-                <th style="padding:4px 8px; border-right:1px solid #334155;">DOCENTE</th>
+                <th style="padding:4px 8px; border-right:1px solid #334155;">COGNOMI</th>
+                <th style="padding:4px 8px; border-right:1px solid #334155;">NOMI</th>
                 <th colspan="2" style="padding:4px 8px; border-right:1px solid #334155;">LUNEDI</th>
               </tr>
               <tr style="background:#0f172a; border-bottom:1px solid #334155;">
+                <th style="border-right:1px solid #334155;"></th>
                 <th style="border-right:1px solid #334155;"></th>
                 <th style="border-right:1px solid #334155;"></th>
                 <th style="padding:4px; border-right:1px solid #334155; font-weight:400; color:#94a3b8;">8ª</th>
@@ -113,16 +130,22 @@ var ScheduleView = (() => {
               </tr>
             </thead>
             <tbody>
-              <tr><td style="padding:4px 8px; text-align:left; color:#818cf8;">ARTE</td><td style="padding:4px 8px; text-align:left; font-weight:700;">NERI E.</td><td style="padding:4px; border-right:1px solid #334155;">1D</td><td style="padding:4px; color:#4ade80; font-weight:700;">DIS</td></tr>
+              <tr>
+                <td style="padding:4px 8px; text-align:left; color:#818cf8;">ARTE</td>
+                <td style="padding:4px 8px; text-align:left; font-weight:700;">NERI</td>
+                <td style="padding:4px 8px; text-align:left; font-weight:700;">ELENA</td>
+                <td style="padding:4px; border-right:1px solid #334155;">1D</td>
+                <td style="padding:4px; color:#4ade80; font-weight:700;">DIS</td>
+              </tr>
             </tbody>
           </table>
         </div>
-        <div class="import-dropzone" id="dropzone" style="border: 2px dashed var(--border); padding: 40px; text-align: center; border-radius: 8px; cursor: pointer; background: var(--bg-secondary)">
+        <div class="import-dropzone" id="dropzone" style="border: 2px dashed var(--border); padding: 24px 16px; text-align: center; border-radius: 8px; cursor: pointer; background: var(--bg-secondary)">
           <div style="font-size:32px; margin-bottom:8px">📄</div>
           <div>Trascina il file qui o clicca per selezionare</div>
           <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none">
         </div>
-        <div style="display:flex; justify-content:center; gap:8px; margin-top:16px">
+        <div style="display:flex; justify-content:center; gap:8px; margin-top:16px; flex-wrap:wrap;">
           <button class="btn btn-ghost btn-sm" onclick="ScheduleView.downloadTemplate()">📥 Scarica Template</button>
           <button class="btn btn-ghost btn-sm" style="color:#ef4444;" onclick="ImportExportView.clearSchedule('${state.yearId}')">🗑️ Svuota e Ricomincia</button>
         </div>
@@ -151,14 +174,20 @@ var ScheduleView = (() => {
         if (rows.length < 3) throw new Error('Il file deve avere almeno 3 righe (Giorno, Ora, Dati).');
 
         const teachers = await API.get(`/teachers?year_id=${state.yearId}`);
-        const headerDays = rows[0];
-        const headerHours = rows[1];
+        const headerDays = rows[0] || [];
+        const headerHours = rows[1] || [];
         let count = 0;
+
+        // Rileva se il file ha 3 colonne anagrafiche (MATERIA, COGNOMI, NOMI) o 2 (MATERIA, DOCENTE)
+        const col2DayStr = String(headerDays[2] || '').trim().toUpperCase();
+        const col2HourStr = String(headerHours[2] || '').trim();
+        const isCol2Hour = !isNaN(parseInt(col2HourStr)) || DAYS.includes(col2DayStr);
+        const startHourCol = isCol2Hour ? 2 : 3;
 
         // Mappa delle colonne: colIdx -> { day, hour }
         const colMap = {};
         let lastDay = '';
-        for (let c = 2; c < headerHours.length; c++) {
+        for (let c = startHourCol; c < headerHours.length; c++) {
           const d = String(headerDays[c] || '').trim().toUpperCase();
           if (d) lastDay = d;
           const hStr = String(headerHours[c] || '').trim();
@@ -174,17 +203,42 @@ var ScheduleView = (() => {
           if (!row || row.length < 2) continue;
           
           const materia = String(row[0] || '').trim().toUpperCase();
-          const teacherName = String(row[1] || '').trim().toUpperCase();
-          if (!teacherName) continue;
+          let teacherName = '';
+          let email = '';
 
-          let teacher = teachers.find(t => t.name === teacherName);
+          if (startHourCol === 3) {
+            // Formato standard nuovo con colonne separate: COGNOMI (col 1), NOMI (col 2)
+            const cognomi = String(row[1] || '').trim().toUpperCase();
+            const nomi = String(row[2] || '').trim().toUpperCase();
+            if (!cognomi && !nomi) continue;
+            teacherName = `${cognomi} ${nomi}`.trim();
+            email = generateTeacherEmail(nomi, cognomi);
+          } else {
+            // Retrocompatibilità formato classico: DOCENTE (col 1)
+            teacherName = String(row[1] || '').trim().toUpperCase();
+            if (!teacherName) continue;
+          }
+
+          let teacher = teachers.find(t => t.name === teacherName || (email && t.email && t.email.toLowerCase() === email.toLowerCase()));
+          const teacherPayload = { 
+            name: teacherName, 
+            subject: materia, 
+            email: email || (teacher ? (teacher.email || '') : ''), 
+            school_year_id: state.yearId, 
+            is_available: true 
+          };
+
           if (!teacher) {
-            teacher = await API.post('/teachers', { name: teacherName, subject: materia, school_year_id: state.yearId, is_available: true });
+            teacher = await API.post('/teachers', teacherPayload);
             teachers.push(teacher);
-          } else if (materia && (teacher.subject || '').toUpperCase() !== materia) {
-            teacher = await API.put(`/teachers/${teacher.id}`, { ...teacher, subject: materia });
-            const idx = teachers.findIndex(tx => tx.id === teacher.id);
-            if (idx !== -1) teachers[idx] = teacher;
+          } else {
+            const needsUpdate = (materia && (teacher.subject || '').toUpperCase() !== materia) ||
+                                (email && (!teacher.email || teacher.email.toLowerCase() !== email.toLowerCase()));
+            if (needsUpdate) {
+              teacher = await API.put(`/teachers/${teacher.id}`, { ...teacher, ...teacherPayload });
+              const idx = teachers.findIndex(tx => tx.id === teacher.id);
+              if (idx !== -1) teachers[idx] = teacher;
+            }
           }
 
           // Salva i singoli slot
@@ -208,12 +262,12 @@ var ScheduleView = (() => {
   }
 
   function downloadTemplate() {
-    // Genera un file Excel (.xlsx) ad alta fedeltà che segue la struttura reale dell'istituto
+    // Genera un file Excel (.xlsx) ad alta fedeltà con Cognomi, Nomi e orario istituzionale
     const days = ['LUNEDI', 'MARTEDI', 'MERCOLEDI', 'GIOVEDI', 'VENERDI'];
     const data = [
-      ['MATERIA', 'DOCENTE'], // Riga 1: Giorni
-      ['', ''],                // Riga 2: Ore
-      ['ESEMPIO MATERIA', 'COGNOME NOME'] // Riga 3: Esempio
+      ['MATERIA', 'COGNOMI', 'NOMI'], // Riga 1: Intestazioni / Giorni
+      ['', '', ''],                   // Riga 2: Ore
+      ['ESEMPIO MATERIA', 'ROSSI BIANCHI', 'MARIA GRAZIA'] // Riga 3: Esempio
     ];
 
     days.forEach(d => {
@@ -221,14 +275,14 @@ var ScheduleView = (() => {
       hours.forEach((h, idx) => {
         data[0].push(idx === 0 ? d : ''); // Il nome del giorno appare solo alla prima ora
         data[1].push(h + 'ª');
-        data[2].push(idx === 0 ? 'CLASSE' : ''); // Suggerimento nel sample
+        data[2].push(idx === 0 ? '1A' : ''); // Suggerimento nel sample
       });
     });
 
     try {
       const ws = XLSX.utils.aoa_to_sheet(data);
-      // Impostiamo larghezza colonne minima
-      ws['!cols'] = [{ wch: 15 }, { wch: 20 }]; 
+      // Impostiamo larghezza colonne minima per leggibilità
+      ws['!cols'] = [{ wch: 18 }, { wch: 22 }, { wch: 20 }]; 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Template Orario");
       XLSX.writeFile(wb, "template_orario_istituto.xlsx");
