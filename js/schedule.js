@@ -480,5 +480,5 @@ var ScheduleView = (() => {
     win.document.close();
   }
 
-  return { render, downloadTemplate };
+  return { render, downloadTemplate, showImportModal, openExportModal: exportCurrentView, exportFullPdf };
 })();

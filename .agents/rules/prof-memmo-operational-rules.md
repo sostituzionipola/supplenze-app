@@ -223,3 +223,23 @@ Valido tassativamente per tutte le applicazioni e siti presenti e futuri dell'Ec
      3. Fornire una diagnosi obiettiva e attendere l'ordine scritto esplicito dell'utente prima di toccare qualsiasi file.
 4. **Bando ai Falsi Positivi di Compilazione**:
    - È fatto divieto assoluto di considerare risolto un problema o conforme un componente basandosi esclusivamente sull'esito positivo del compilatore (`npm run build`, assenza di errori di sintassi o linter). L'unico criterio di conformità valido è il comportamento a runtime nel browser reale su tutte le piattaforme supportate.
+
+---
+
+### ART. 15 - PROTOCOLLO DI NON-REGRESSIONE DELLA NAVIGAZIONE E COLLAUDO A VERIFICA DI STATO (NAVIGATION INTEGRITY & STATE-ASSERTION TEST GUARD)
+Valido tassativamente per tutte le applicazioni e siti presenti e futuri dell'Ecosistema Prof. Memmo:
+1. **Separazione tra Navigazione e Protezione Contenuto (Zero Dumb Buttons)**:
+   - È fatto divieto assoluto di rendere i pulsanti e tab di navigazione (`.tab-item`, `[data-view]`, `[data-section]`, `.nav-item`) inerti o bloccati con un `return;` silenzioso che lasci l'utente intrappolato sulla Home page senza feedback visivo.
+   - La transizione alla vista richiesta deve sempre scattare (`view.classList.add('active')`); se l'area richiede autenticazione o un piano specifico, sarà il contenuto interno della vista a mostrare il prompt di login o la card autorizzativa Capibara/HubSubscriptionGuard, mai la barra di navigazione a congelarsi.
+2. **Resilienza all'Asincronia di Autenticazione (Zero Sync Auth Assumptions)**:
+   - È severamente vietato subordinare il cambio di vista a controlli sincroni istantanei su variabili in memoria (`currentUserEmail`, `window.auth.currentUser`) al momento del clic.
+   - Il routing deve verificare in modo resiliente e immediato anche i token/ruoli persistiti in `localStorage` (`hub_user_class`, `pm_student_class`, `fanta_user_email`, `loratore_user_name`), garantendo continuità operativa ed evitando blocchi all'avvio.
+3. **Collaudo Obbligatorio con Asserzione di Stato Reale (State-Assertion Driven Testing)**:
+   - È fatto divieto categorico di considerare superato un collaudo verificando soltanto l'assenza di errori in console (`0 pageerror` o assenza di alert).
+   - Ogni collaudo automatico (`tools/test_every_button_ecosystem.py` e `tools/collaudo_totale.py`) DEVE obbligatoriamente verificare tramite Playwright l'effetto collaterale visivo nel DOM:
+     $$\text{targetView.classList.contains('active')} == \text{true} \quad \text{e} \quad \text{display} \neq \text{'none'}$$
+     Se la vista target non diventa attiva e visibile a schermo, il test deve fallire immediatamente segnalando la regressione bloccante.
+4. **Scansione Esaustiva Senza Troncamenti di Loop**:
+   - I crawler e test runner di navigazione non possono mai applicare limiti arbitrari al numero di elementi testati (es. `[:15]`). Tutti gli elementi interattivi visibili (`button, [role='button'], a.btn, .btn, .tab-item, [data-view], [data-section], .nav-item, .admin-tab-btn`) devono essere cliccati e verificati integralmente su tutti i giochi dell'ecosistema.
+5. **Diff-Check Obbligatorio sulle Viste Pubbliche**:
+   - Qualsiasi intervento sugli array `isPublic` / `isPublicView` deve essere preceduto da un censimento completo dei tab definiti nell'`index.html` del gioco, assicurando che nessuna scheda stabilizzata (es. *Classifiche*, *Schede*, *Regolamento*, *Tabellone*) venga esclusa o resa inaccessibile per errore collaterale.

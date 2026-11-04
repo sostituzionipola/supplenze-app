@@ -1253,5 +1253,5 @@ var TeachersView = (() => {
     }
   }
 
-  return { render, openModal, openHistoryPopup, exportAll, openExportModal, adjustHours, toggleAvail, deleteTeacher, renderRecuperi, exportSection, handleImport, deleteLongTerm };
+  return { render, openModal, openHistoryPopup, exportAll, openExportModal, openImportModal, adjustHours, toggleAvail, deleteTeacher, renderRecuperi, exportSection, handleImport, deleteLongTerm };
 })();
