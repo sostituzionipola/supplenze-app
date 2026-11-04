@@ -88,15 +88,18 @@ var TeacherSelfServiceView = (() => {
       
       let shortPermitHours = 0;
       let malattiaDays = 0;
+      let malattiaHours = 0;
       let altroPermessoCount = 0;
 
       teacherAbs.forEach(a => {
         const type = (a.type || '').toLowerCase();
-        const hoursCount = a.hours_count ? parseInt(a.hours_count) : (a.hours && Array.isArray(a.hours) ? a.hours.length : 1);
+        const hoursCount = a.hours_count ? parseInt(a.hours_count) : (a.hours && Array.isArray(a.hours) ? a.hours.length : 0);
         if (type === 'permesso_orario' || type === 'permit_hour' || type === 'permesso_breve' || type === 'permesso_ora') {
-          shortPermitHours += hoursCount;
+          shortPermitHours += (hoursCount || 1);
         } else if (type === 'malattia') {
-          if (a.date_end && a.date_end !== a.date) {
+          if (a.hours && Array.isArray(a.hours) && a.hours.length > 0) {
+            malattiaHours += a.hours.length;
+          } else if (a.date_end && a.date_end !== a.date) {
             const d1 = new Date(a.date);
             const d2 = new Date(a.date_end);
             const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
@@ -115,7 +118,7 @@ var TeacherSelfServiceView = (() => {
       });
 
       const s = {
-        malattia: malattiaDays,
+        malattia: `${malattiaDays} gg${malattiaHours > 0 ? ` (${malattiaHours}h)` : ''}`,
         altro_permesso: stats.permessi_giornalieri || altroPermessoCount || 0,
         ferie: stats.ferie || 0,
         formazione: stats.formazione || 0,
@@ -127,7 +130,7 @@ var TeacherSelfServiceView = (() => {
       };
 
       container.querySelector('#ts-stats-bar').innerHTML = `
-        <div class="badge badge-error" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">🤒 Malattia: <strong>${s.malattia} gg</strong></div>
+        <div class="badge badge-error" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">🤒 Malattia: <strong>${s.malattia}</strong></div>
         <div class="badge badge-success" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">📄 Altri Permessi: <strong>${s.altro_permesso}/3</strong></div>
         <div class="badge badge-warning" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">⏳ Permessi Brevi: <strong>${shortPermitHours}/${weeklyH} h</strong></div>
         <div class="badge badge-info" style="background:var(--bg-card); border:1px solid var(--border); padding:8px 12px; font-size:12px;">🏝️ Ferie: <strong>${s.ferie}/6</strong></div>
@@ -192,6 +195,10 @@ var TeacherSelfServiceView = (() => {
               <input type="radio" name="ts-abs-tipo" id="ts-tipo-mal" value="malattia" style="width:15px;height:15px;">
               <div><div style="font-weight:700; font-size:11px;">🤒 Malattia</div><div style="font-size:9px; color:var(--text-secondary);">Intera giornata</div></div>
             </label>
+            <label id="ts-tipo-mal-ore-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--border); background:var(--bg-secondary);">
+              <input type="radio" name="ts-abs-tipo" id="ts-tipo-mal-ore" value="malattia_ore" style="width:15px;height:15px;">
+              <div><div style="font-weight:700; font-size:11px;">🩺 Malattia a Ore</div><div style="font-size:9px; color:var(--text-secondary);">Singole ore</div></div>
+            </label>
             <label id="ts-tipo-alt-lbl" style="display:flex; align-items:center; gap:8px; padding:10px; border-radius:10px; cursor:pointer; border:2px solid var(--accent); background:var(--accent-light);">
               <input type="radio" name="ts-abs-tipo" id="ts-tipo-alt" value="altro_permesso" checked style="width:15px;height:15px;">
               <div><div style="font-weight:700; font-size:11px;">📄 Altro Permesso</div><div style="font-size:9px; color:var(--text-secondary);">Max 3gg/anno (non rec.)</div></div>
@@ -230,14 +237,41 @@ var TeacherSelfServiceView = (() => {
             </label>
           </div>
 
+          <!-- Promemoria Informativi Dinamici per Tipologia -->
           <div id="ts-malattia-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.3); border-radius:8px; padding:12px;">
             ℹ️ <strong>Promemoria Malattia:</strong> Questa segnalazione serve per organizzare tempestivamente le supplenze. Il certificato telematico o numero di protocollo PUC va comunicato direttamente alla Segreteria del Personale secondo le consuete modalità.
           </div>
 
-          <div id="ts-altro-mode-wrapper" style="display:none; margin-bottom:14px; padding:10px 14px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; gap:16px;">
-            <span style="font-size:11px; font-weight:700;">Fruizione Altro Permesso:</span>
-            <label style="font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;"><input type="radio" name="ts-altro-mode" id="ts-altro-mode-day" value="giornata" checked> 📅 Intera Giornata</label>
-            <label style="font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;"><input type="radio" name="ts-altro-mode" id="ts-altro-mode-hour" value="ore"> ⏰ Singole Ore (senza debito)</label>
+          <div id="ts-altro-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:12px;">
+            📄 <strong>Promemoria Altro Permesso:</strong> Max 3 all'anno, non soggetti a recupero. Per ulteriori informazioni chiedi al Referente.
+          </div>
+
+          <div id="ts-permesso-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:12px;">
+            ⏳ <strong>Promemoria Permessi Brevi (Art. 16 CCNL):</strong> Max 2 ore al giorno. Le ore sono soggette a recupero con supplenze entro 2 mesi lavorativi.
+          </div>
+
+          <div id="ts-ferie-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px;">
+            🏝️ <strong>Promemoria Ferie (Art. 15 c. 2):</strong> Max 6 giorni all'anno. È obbligatorio concordare la sostituzione a costo zero con i colleghi indicati sotto.
+          </div>
+
+          <div id="ts-formazione-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px;">
+            📚 <strong>Promemoria Formazione:</strong> Fino a 5 giorni annui con esonero dal servizio per aggiornamento e formazione accreditata.
+          </div>
+
+          <div id="ts-lutto-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(107,114,128,0.08); border:1px solid rgba(107,114,128,0.3); border-radius:8px; padding:12px;">
+            🕊️ <strong>Promemoria Lutto:</strong> 3 giorni per evento in caso di lutto per coniuge, conviventi o parenti entro il secondo grado.
+          </div>
+
+          <div id="ts-concorsi-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px;">
+            📝 <strong>Promemoria Concorsi:</strong> Fino a 8 giorni complessivi per partecipazione a concorsi o esami.
+          </div>
+
+          <div id="ts-matrimonio-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(236,72,153,0.08); border:1px solid rgba(236,72,153,0.3); border-radius:8px; padding:12px;">
+            💍 <strong>Promemoria Matrimonio:</strong> 15 giorni consecutivi per congedo matrimoniale.
+          </div>
+
+          <div id="ts-sindacale-disclaimer" class="alert alert-info" style="display:none; font-size:12px; margin-bottom:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px;">
+            📢 <strong>Promemoria Sindacale:</strong> Fino a 12 giorni/anno per attività o cariche sindacali previste da CCNL.
           </div>
 
           <div class="form-group">
@@ -278,6 +312,7 @@ var TeacherSelfServiceView = (() => {
 
     const form = container.querySelector('#ts-absence-form');
     const tipoMalEl = container.querySelector('#ts-tipo-mal');
+    const tipoMalOreEl = container.querySelector('#ts-tipo-mal-ore');
     const tipoAltEl = container.querySelector('#ts-tipo-alt');
     const tipoOraEl = container.querySelector('#ts-tipo-ora');
     const tipoUscEl = container.querySelector('#ts-tipo-usc');
@@ -290,14 +325,18 @@ var TeacherSelfServiceView = (() => {
 
     const updateTipoStyle = () => {
       const isMal = tipoMalEl?.checked;
+      const isMalOre = tipoMalOreEl?.checked;
       const isAlt = tipoAltEl?.checked;
       const isOra = tipoOraEl?.checked;
       const isUsc = tipoUscEl?.checked;
       const isFer = tipoFerEl?.checked;
-      const altroMode = container.querySelector('input[name="ts-altro-mode"]:checked')?.value || 'giornata';
-      const isAltroOre = isAlt && altroMode === 'ore';
+      const isFor = tipoForEl?.checked;
+      const isCon = tipoConEl?.checked;
+      const isMat = tipoMatEl?.checked;
+      const isLut = tipoLutEl?.checked;
+      const isSin = tipoSinEl?.checked;
       
-      const ids = ['ts-tipo-mal','ts-tipo-alt','ts-tipo-ora','ts-tipo-usc','ts-tipo-fer','ts-tipo-for','ts-tipo-con','ts-tipo-mat','ts-tipo-lut','ts-tipo-sin'];
+      const ids = ['ts-tipo-mal','ts-tipo-mal-ore','ts-tipo-alt','ts-tipo-ora','ts-tipo-usc','ts-tipo-fer','ts-tipo-for','ts-tipo-con','ts-tipo-mat','ts-tipo-lut','ts-tipo-sin'];
       ids.forEach(id => {
         const el = container.querySelector('#' + id);
         const lbl = container.querySelector('#' + id + '-lbl');
@@ -307,20 +346,29 @@ var TeacherSelfServiceView = (() => {
         }
       });
 
-      container.querySelector('#ts-malattia-disclaimer').style.display = isMal ? 'block' : 'none';
-      const altroWrapper = container.querySelector('#ts-altro-mode-wrapper');
-      if (altroWrapper) altroWrapper.style.display = isAlt ? 'flex' : 'none';
+      const setDisplay = (id, show) => {
+        const el = container.querySelector('#' + id);
+        if (el) el.style.display = show ? 'block' : 'none';
+      };
 
-      container.querySelector('#hours-wrapper').style.display = (isOra || isUsc || isAltroOre) ? 'block' : 'none';
+      setDisplay('ts-malattia-disclaimer', isMal || isMalOre);
+      setDisplay('ts-altro-disclaimer', isAlt);
+      setDisplay('ts-permesso-disclaimer', isOra);
+      setDisplay('ts-ferie-disclaimer', isFer);
+      setDisplay('ts-formazione-disclaimer', isFor);
+      setDisplay('ts-lutto-disclaimer', isLut);
+      setDisplay('ts-concorsi-disclaimer', isCon);
+      setDisplay('ts-matrimonio-disclaimer', isMat);
+      setDisplay('ts-sindacale-disclaimer', isSin);
+
+      container.querySelector('#hours-wrapper').style.display = (isMalOre || isOra || isUsc || isAlt) ? 'block' : 'none';
       container.querySelector('#classes-wrapper').style.display = isUsc ? 'block' : 'none';
       container.querySelector('#accompanists-wrapper').style.display = isUsc ? 'block' : 'none';
       container.querySelector('#subs-wrapper').style.display = isFer ? 'block' : 'none';
       
-      const hideReason = isMal || isFer || isUsc || tipoForEl?.checked || tipoConEl?.checked || tipoSinEl?.checked || tipoMatEl?.checked || tipoLutEl?.checked;
+      const hideReason = isMal || isMalOre || isFer || isUsc || isFor || isCon || isSin || isMat || isLut;
       container.querySelector('#reason-wrapper').style.display = hideReason ? 'none' : 'block';
     };
-
-    container.querySelectorAll('input[name="ts-altro-mode"]').forEach(r => r.addEventListener('change', updateTipoStyle));
 
     const subsContainer = container.querySelector('#ts-ferie-subs-container');
     const updateFerieSubs = async () => {
@@ -364,7 +412,7 @@ var TeacherSelfServiceView = (() => {
       }
     };
 
-    [tipoMalEl, tipoGenEl, tipoOraEl, tipoVisEl, tipoUscEl, tipoFerEl, tipoForEl, tipoConEl, tipoMatEl, tipoSinEl].forEach(el => el?.addEventListener('change', () => {
+    [tipoMalEl, tipoMalOreEl, tipoAltEl, tipoOraEl, tipoUscEl, tipoFerEl, tipoForEl, tipoConEl, tipoMatEl, tipoLutEl, tipoSinEl].forEach(el => el?.addEventListener('change', () => {
       updateTipoStyle();
       if (tipoFerEl?.checked) updateFerieSubs();
     }));
@@ -413,21 +461,28 @@ var TeacherSelfServiceView = (() => {
 
     form.onsubmit = async (e) => {
       e.preventDefault();
+      const rawType = container.querySelector('input[name="ts-abs-tipo"]:checked')?.value || 'altro_permesso';
+      const isMalOre = rawType === 'malattia_ore';
+      const finalType = isMalOre ? 'malattia' : rawType;
+
       const payload = {
         school_year_id: _yearId,
         teacher_id: _teacherId,
         date: container.querySelector('#abs-date-start').value,
         date_end: container.querySelector('#abs-date-end').value,
-        type: container.querySelector('input[name="ts-abs-tipo"]:checked').value,
+        type: finalType,
         reason: container.querySelector('#abs-reason')?.value || '',
         status: 'pending'
       };
-      const isAltro = payload.type === 'altro_permesso';
-      const altroMode = container.querySelector('input[name="ts-altro-mode"]:checked')?.value || 'giornata';
-      if (payload.type === 'permesso_orario' || payload.type === 'uscita_didattica' || (isAltro && altroMode === 'ore')) {
+
+      if (isMalOre || payload.type === 'permesso_orario' || payload.type === 'uscita_didattica') {
         payload.hours = tsHours.getValue();
         if (!payload.hours.length) return APP.toast('Seleziona le ore interessate', 'warning');
+      } else if (payload.type === 'altro_permesso') {
+        const h = tsHours.getValue();
+        if (h && h.length) payload.hours = h;
       }
+
       if (payload.type === 'ferie') {
         const subs = {};
         container.querySelectorAll('.ts-ferie-sub-sel').forEach(sel => {
@@ -868,12 +923,12 @@ async function renderOre(container, state) {
         </div>
 
         <!-- Card 3: Altri Permessi -->
-        <div class="stat-card" style="background:#fdf4ff; border:1px solid #f0abfc; padding:16px; border-radius:10px;">
+        <div class="stat-card" style="background:#fdf2f8; border:1px solid #fbcfe8; padding:16px; border-radius:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:13px; font-weight:700; color:#a21caf;">📄 ALTRI PERMESSI</div>
-            <span class="badge" style="background:#fae8ff; color:#a21caf; border:1px solid #f0abfc;">Max 3/anno</span>
+            <div style="font-size:13px; font-weight:700; color:#be185d;">📄 ALTRI PERMESSI</div>
+            <span class="badge" style="background:#fce7f3; color:#be185d; border:1px solid #fbcfe8;">${altroPermessoCount} req</span>
           </div>
-          <div style="font-size:26px; font-weight:800; color:#a21caf; margin:8px 0 4px 0;">
+          <div style="font-size:26px; font-weight:800; color:#be185d; margin:8px 0 4px 0;">
             ${altroPermessoCount} / 3
           </div>
           <div style="font-size:11px; color:var(--text-secondary); line-height:1.4;">
