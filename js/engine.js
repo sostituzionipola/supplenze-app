@@ -13,7 +13,7 @@ const Engine = (() => {
 
   // ── STATO INIZIALE & SCHEMI ──────────────────────────────────────────────────
   const INITIAL_DB = {
-    school_years: [{ id: 2, name: '2025/26', is_active: 1 }],
+    school_years: [{ id: 2, name: '2026/27', is_active: 1, start_date: '2026-09-01', end_date: '2027-08-31' }],
     users: [],
     teachers: [],
     classes: [],
@@ -208,6 +208,24 @@ const Engine = (() => {
       });
 
       await Promise.all(initPromises);
+
+      // Auto-allineamento anno scolastico attivo da 2025/26 a 2026/27 se presente
+      const y25 = (_db.school_years || []).find(y => y.name === '2025/26' || y.id == 2);
+      if (y25 && y25.name === '2025/26') {
+        y25.name = '2026/27';
+        y25.start_date = '2026-09-01';
+        y25.end_date = '2027-08-31';
+        try {
+          await db.collection('school_years').doc(String(y25.id)).update({
+            name: '2026/27',
+            start_date: '2026-09-01',
+            end_date: '2027-08-31'
+          });
+        } catch(e) {
+          console.warn('Allineamento anno cloud completato in locale');
+        }
+      }
+
       _initialized = true;
       if (_onDataUpdate) _onDataUpdate(_db);
     } catch (err) {
