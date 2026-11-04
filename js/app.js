@@ -56,13 +56,17 @@ const APP = (() => {
       admin_notifications: typeof AdminNotificationsView !== 'undefined' ? AdminNotificationsView : { render: (c) => c.innerHTML = 'Errore caricamento Notifiche' },
       import_export: typeof ImportExportView !== 'undefined' ? ImportExportView : { render: (c) => c.innerHTML = 'Errore caricamento Importa ed Esporta Dati' },
       events: typeof EventsView !== 'undefined' ? EventsView : { render: (c) => c.innerHTML = 'Errore caricamento Eventi Scolastici' },
+      organigramma: typeof OrganigrammaView !== 'undefined' ? OrganigrammaView : { render: (c, s) => OrganigrammaView.render(c, s) },
       login_preview: { render: (c) => renderLoginPreview(c) }
     };
     return VIEWS;
   }
 
-  function isAdminMaster() { return state.user?.role === 'admin_master'; }
-  function isAdmin() { return state.user?.role === 'admin' || state.user?.role === 'admin_master'; }
+  function isAdminMaster() { return (state.user?.role || '').toLowerCase().trim() === 'admin_master'; }
+  function isAdmin() { 
+    const r = (state.user?.role || '').toLowerCase().trim();
+    return r === 'admin' || r === 'admin_master'; 
+  }
   function isTeacher() { return state.user?.role === 'teacher'; }
 
   function toast(msg, type='info', duration=3500) {
@@ -393,7 +397,8 @@ const APP = (() => {
     if (!currentViews[v]) return;
     
     if (v === 'login_preview' && !isAdminMaster()) { toast('Accesso negato.', 'warning'); return; }
-    if (['teachers', 'schedule', 'settings', 'admin_notifications'].includes(v) && !isAdmin()) {
+    if (v === 'settings' && !isAdminMaster()) { toast('Accesso riservato ad Admin Master.', 'warning'); return; }
+    if (['teachers', 'import_export', 'admin_notifications'].includes(v) && !isAdmin()) {
       toast('Permessi insufficienti.', 'warning'); return;
     }
 
@@ -443,7 +448,15 @@ const APP = (() => {
             }
           }
         } else if (state.user) {
-          // Se siamo già loggati (es. via onAuth), aggiorniamo i dati
+          // Se siamo già loggati (es. via onAuth), aggiorniamo l'utente fresco e la navbar
+          try {
+            const fresh = await API.get('/auth/me');
+            if (fresh) {
+              state.user = fresh;
+              updateUserInfo();
+              buildNav();
+            }
+          } catch(e) {}
           navigate(state.currentView);
           loadYears();
         }
@@ -670,7 +683,7 @@ const APP = (() => {
   }
 
   function buildNav() {
-    const role = state.user?.role;
+    const role = (state.user?.role || '').toLowerCase().trim();
     const isMaster = role === 'admin_master';
     const isAdminOrMaster = role === 'admin' || role === 'admin_master';
 
@@ -679,13 +692,19 @@ const APP = (() => {
       if (el) el.style.display = condition ? (el.tagName === 'DIV' ? 'flex' : 'block') : 'none';
     };
 
+    // Amministrazione (riservata ad Admin e Master)
+    showIf('#admin-section-label', isAdminOrMaster);
     showIf('.nav-item[data-view="teachers"]', isAdminOrMaster);
     showIf('.nav-item[data-view="admin_notifications"]', isAdminOrMaster);
-    showIf('.nav-item[data-view="schedule"]', isAdminOrMaster);
-    showIf('.nav-item[data-view="settings"]', isAdminOrMaster);
     showIf('.nav-item[data-view="import_export"]', isAdminOrMaster);
+    showIf('.nav-item[data-view="settings"]', isMaster); // Solo Admin Master!
     showIf('#nav-login-preview', isMaster);
     showIf('#nav-instr-admin', isAdminOrMaster);
+
+    // Principale (visibili a tutti)
+    showIf('.nav-item[data-view="schedule"]', true);
+    showIf('.nav-item[data-view="organigramma"]', true);
+
     renderSimControl();
   }
 

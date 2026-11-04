@@ -42,7 +42,24 @@ const API = (() => {
            });
         });
         if (user) {
-          const dbUser = Engine.getDb().users.find(u => u.email === user.email);
+          const userEmail = (user.email || '').toLowerCase().trim();
+          let dbUser = Engine.getDb().users.find(u => (u.email || '').toLowerCase().trim() === userEmail);
+
+          if (!dbUser && typeof firebase !== 'undefined' && firebase.firestore) {
+            try {
+              const fs = firebase.firestore();
+              const snap = await fs.collection('users').get();
+              const foundDoc = snap.docs.find(d => ((d.data().email || '').toLowerCase().trim() === userEmail));
+              if (foundDoc) {
+                dbUser = { ...foundDoc.data(), id: foundDoc.id };
+                const currUsers = Engine.getDb().users;
+                if (!currUsers.some(u => u.id === dbUser.id)) currUsers.push(dbUser);
+              }
+            } catch(e) {
+              console.warn("[API] Fallback query users error:", e);
+            }
+          }
+
           const teacher = dbUser && dbUser.teacher_id ? Engine.getDb().teachers.find(t => t.id === dbUser.teacher_id) : null;
           return dbUser ? { ...dbUser, teacher } : { username: user.displayName, email: user.email, role: 'teacher' };
         }

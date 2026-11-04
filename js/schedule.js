@@ -352,6 +352,7 @@ var ScheduleView = (() => {
 
       area.querySelectorAll('.schedule-cell').forEach(cell => {
         cell.onclick = () => {
+          if (!APP.isAdmin()) return;
           _selTeacherId = cell.dataset.tid;
           editCell(cell);
         };
@@ -492,6 +493,7 @@ var ScheduleView = (() => {
   }
 
   function editCell(cell) {
+    if (!APP.isAdmin()) return;
     const day  = cell.dataset.day;
     const hour = parseInt(cell.dataset.hour);
     const tid  = cell.dataset.tid;

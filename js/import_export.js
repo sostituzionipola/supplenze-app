@@ -72,40 +72,27 @@ var ImportExportView = (() => {
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
                <button class="btn btn-secondary btn-sm" id="btn-exp-schedule" style="flex:1; justify-content:center; min-width:80px;">📤 Esporta</button>
                <button class="btn btn-secondary btn-sm" id="btn-tmpl-schedule" style="flex:1; justify-content:center; min-width:80px;">📄 Template</button>
+               <button class="btn btn-secondary btn-sm" id="btn-full-schedule" style="flex:1; justify-content:center; min-width:80px;">🖥️ Schermo Intero</button>
                <button class="btn btn-ghost btn-sm" id="btn-clear-schedule" style="width:100%; justify-content:center; color:#ef4444; border:1px solid #ef4444; margin-top:4px;">🗑️ Svuota Orario</button>
             </div>
           </div>
         </div>
 
-        <!-- 2. IMPORT ANAGRAFICA -->
+        <!-- 2. ANAGRAFICA DOCENTI (Sola consultazione & Export) -->
         <div class="card import_card" style="display:flex; flex-direction:column; border:1px solid var(--border-light); background:var(--bg-card);">
           <div class="card-header" style="background:var(--bg-secondary); border-bottom:1px solid var(--border)">
             <h3 class="card-title">👨‍🏫 Anagrafica Docenti</h3>
           </div>
-          <div class="card-body" style="flex:1; padding:20px;">
-            <p style="font-size:12px; line-height:1.5; margin-bottom:12px;">
-              Carica l'elenco dei docenti per l'anno in corso.<br/>
-              Richiesto: <em>Nome Cognome, Materia, Email</em>.
+          <div class="card-body" style="flex:1; padding:20px; display:flex; flex-direction:column;">
+            <p style="font-size:12px; line-height:1.6; margin-bottom:16px; color:var(--text-secondary);">
+              L'anagrafica dei docenti e le relative email istituzionali vengono create e sincronizzate automaticamente al caricamento dell'<strong>Orario Scolastico</strong>.<br/>
+              Da questa sezione puoi consultare le schede o scaricare l'elenco ufficiale completo.
             </p>
             
-            <div style="background:#1e293b; border:1px solid #334155; border-radius:6px; overflow:hidden; margin-bottom:16px;">
-              <table style="width:100%; font-size:9px; text-align:left; border-collapse:collapse; color:#f8fafc;">
-                <thead>
-                  <tr style="background:#0f172a; border-bottom:1px solid #334155;">
-                    <th style="padding:6px; font-size:8px; text-transform:uppercase;">NOME COGNOME</th>
-                    <th style="padding:6px; font-size:8px; text-transform:uppercase;">MATERIA</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr style="border-bottom:1px solid #334155;">
-                    <td style="padding:6px;">ROSSI MARIO</td>
-                    <td style="padding:6px;">MATEMATICA</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:auto;">
+              <button class="btn btn-primary" id="btn-view-teachers" style="width:100%; justify-content:center; gap:8px;">👁️ Consulta Anagrafica</button>
+              <button class="btn btn-secondary btn-sm" id="btn-exp-teachers" style="width:100%; justify-content:center; gap:8px;">📤 Esporta Anagrafica (.xlsx)</button>
             </div>
-            <button class="btn btn-primary" id="btn-imp-teachers" style="width:100%; justify-content:center; gap:8px; margin-bottom:12px;">👥 Importa Docenti</button>
-            <button class="btn btn-secondary btn-sm" id="btn-exp-teachers" style="width:100%; justify-content:center;">📤 Esporta Anagrafica</button>
           </div>
         </div>
 
@@ -231,12 +218,13 @@ var ImportExportView = (() => {
     container.querySelector('#btn-imp-ricevimento').onclick = () => ScheduleView.showImportModal(state, () => APP.toast('Ricevimenti aggiornati','success'));
     container.querySelector('#btn-imp-dis').onclick = () => ScheduleView.showImportModal(state, () => APP.toast('Disponibilità DIS aggiornate','success'));
     container.querySelector('#btn-imp-ecc').onclick = () => ScheduleView.showImportModal(state, () => APP.toast('Ore eccedenti ECC aggiornate','success'));
-    container.querySelector('#btn-imp-teachers').onclick = () => TeachersView.openImportModal();
-    container.querySelector('#btn-imp-debt').onclick = () => TeachersView.openImportModal(true);
-    container.querySelector('#btn-tmpl-schedule').onclick = () => ScheduleView.downloadTemplate();
+    container.querySelector('#btn-view-teachers')?.addEventListener('click', () => APP.navigate('teachers'));
+    container.querySelector('#btn-full-schedule')?.addEventListener('click', () => ScheduleView.exportFullPdf());
+    container.querySelector('#btn-imp-debt')?.addEventListener('click', () => TeachersView.openImportModal(true));
+    container.querySelector('#btn-tmpl-schedule')?.addEventListener('click', () => ScheduleView.downloadTemplate());
 
-    container.querySelector('#btn-exp-schedule').onclick = () => ScheduleView.openExportModal();
-    container.querySelector('#btn-exp-teachers').onclick = () => TeachersView.openExportModal();
+    container.querySelector('#btn-exp-schedule')?.addEventListener('click', () => ScheduleView.openExportModal());
+    container.querySelector('#btn-exp-teachers')?.addEventListener('click', () => TeachersView.openExportModal());
     container.querySelector('#btn-exp-debt')?.addEventListener('click', () => TeachersView.openExportModal(true));
     
     container.querySelector('#btn-clear-schedule').onclick = async () => {
