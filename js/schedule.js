@@ -10,10 +10,24 @@ var ScheduleView = (() => {
   let _filterMode = 'tutto'; // 'tutto' | 'classi' | 'dis_ecc'
   let _selDay = 'LUNEDI';
   let _schedSelectedIds = new Set();
-  let _scheduleType = 'definitivo'; // 'provvisorio' | 'definitivo'
-  let _userSwitchedType = false;
+  let _scheduleType = 'definitivo'; // Default 'definitivo'
 
-  async function render(container, state) {
+  function updateVigenzaLabel() {
+    const vigenzaEl = document.getElementById('sched-vigenza-info');
+    if (!vigenzaEl) return;
+    const periods = (typeof Engine !== 'undefined' && Engine.getSchedulePeriodsSync) 
+      ? Engine.getSchedulePeriodsSync(_yearId) 
+      : null;
+    const p = _scheduleType === 'provvisorio' ? periods?.provvisorio : periods?.definitivo;
+    if (p?.start_date && p?.end_date) {
+      vigenzaEl.innerHTML = `Vigenza ${_scheduleType === 'provvisorio' ? 'Provvisorio' : 'Definitivo'}: <strong style="color:var(--text-primary)">dal ${fmtDate(p.start_date)} al ${fmtDate(p.end_date)}</strong>`;
+    } else {
+      const hint = _scheduleType === 'provvisorio' ? 'inattivo' : 'valido tutto l\'anno scolastico';
+      vigenzaEl.innerHTML = `Vigenza ${_scheduleType === 'provvisorio' ? 'Provvisorio' : 'Definitivo'}: <span style="color:var(--text-muted); font-style:italic;">Nessuna data impostata (${hint})</span>`;
+    }
+  }
+
+  function render(container, state) {
     _yearId = state.yearId;
     if (!_yearId) { 
       container.innerHTML = `
@@ -28,21 +42,6 @@ var ScheduleView = (() => {
           </div>
         </div>`;
       return; 
-    }
-
-    // Auto-selezione iniziale del tipo in base alle date di vigenza se l'utente non ha switchato manualmente
-    if (!_userSwitchedType) {
-      try {
-        const periods = await API.get(`/schedule/periods?year_id=${_yearId}`);
-        const todayStr = todayISO();
-        if (periods?.provvisorio?.start_date && periods?.provvisorio?.end_date) {
-          if (todayStr >= periods.provvisorio.start_date && todayStr <= periods.provvisorio.end_date) {
-            _scheduleType = 'provvisorio';
-          } else {
-            _scheduleType = 'definitivo';
-          }
-        }
-      } catch(e) {}
     }
 
     container.innerHTML = `
@@ -97,16 +96,23 @@ var ScheduleView = (() => {
       <div id="sched-mode-controls" style="margin-top:12px;"></div>
       <div id="sched-master-area"></div>`;
 
-    container.querySelector('#sched-type-provvisorio').onclick = () => {
-      _scheduleType = 'provvisorio';
-      _userSwitchedType = true;
-      render(container, state);
-    };
-    container.querySelector('#sched-type-definitivo').onclick = () => {
-      _scheduleType = 'definitivo';
-      _userSwitchedType = true;
-      render(container, state);
-    };
+    function switchScheduleType(newType) {
+      if (_scheduleType === newType) return;
+      _scheduleType = newType;
+      const btnProv = container.querySelector('#sched-type-provvisorio');
+      const btnDef = container.querySelector('#sched-type-definitivo');
+      if (btnProv) {
+        btnProv.className = `btn btn-sm ${_scheduleType==='provvisorio'?'btn-primary':'btn-ghost'}`;
+      }
+      if (btnDef) {
+        btnDef.className = `btn btn-sm ${_scheduleType==='definitivo'?'btn-primary':'btn-ghost'}`;
+      }
+      updateVigenzaLabel();
+      loadMasterGrid();
+    }
+
+    container.querySelector('#sched-type-provvisorio').onclick = () => switchScheduleType('provvisorio');
+    container.querySelector('#sched-type-definitivo').onclick = () => switchScheduleType('definitivo');
 
     container.querySelector('#sched-search').oninput = debounce(() => loadMasterGrid());
     container.querySelector('#sched-sort').onchange = () => loadMasterGrid();
@@ -404,24 +410,12 @@ var ScheduleView = (() => {
   async function loadMasterGrid() {
     const area = document.getElementById('sched-master-area');
     if (!area) return;
+    updateVigenzaLabel();
     area.innerHTML = '<div class="loading-overlay"><div class="spinner"></div> Caricamento orario completo...</div>';
     try {
       _teachers = await API.get(`/teachers?year_id=${_yearId}`);
       _schedule = await API.get(`/schedule?year_id=${_yearId}&schedule_type=${_scheduleType}`);
-      
-      // Aggiornamento dinamico periodo di vigenza nel badge
-      const vigenzaEl = document.getElementById('sched-vigenza-info');
-      if (vigenzaEl) {
-        try {
-          const periods = await API.get(`/schedule/periods?year_id=${_yearId}`);
-          const p = _scheduleType === 'provvisorio' ? periods?.provvisorio : periods?.definitivo;
-          if (p?.start_date && p?.end_date) {
-            vigenzaEl.innerHTML = `Vigenza ${_scheduleType === 'provvisorio' ? 'Provvisorio' : 'Definitivo'}: <strong style="color:var(--text-primary)">dal ${fmtDate(p.start_date)} al ${fmtDate(p.end_date)}</strong>`;
-          } else {
-            vigenzaEl.innerHTML = `Vigenza ${_scheduleType === 'provvisorio' ? 'Provvisorio' : 'Definitivo'}: <span style="color:var(--text-muted); font-style:italic;">Nessuna data impostata</span>`;
-          }
-        } catch(e) {}
-      }
+      updateVigenzaLabel();
       
       const q = (document.getElementById('sched-search')?.value||'').toLowerCase();
       const sort = document.getElementById('sched-sort')?.value;
@@ -552,7 +546,16 @@ var ScheduleView = (() => {
 
     const allHours = [8,9,10,11,12,13,14,15];
     
-    let html = `
+    let emptyNotice = '';
+    if (!_schedule.length) {
+      const typeName = _scheduleType === 'provvisorio' ? 'Orario Provvisorio' : 'Orario Definitivo';
+      emptyNotice = `
+        <div style="background:var(--bg-secondary); border:1px dashed var(--border); border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:12px; color:var(--text-secondary); display:flex; align-items:center; gap:8px;">
+          <span>ℹ️</span> <span>Nessuna lezione caricata per il <strong>${typeName}</strong>. Puoi importare il file Excel da <em>Importa ed Esporta Dati</em> o inserire gli slot manualmente cliccando sulle celle.</span>
+        </div>`;
+    }
+    
+    let html = emptyNotice + `
       <div class="ov-master-wrapper" style="max-height:calc(100vh - 220px)">
         <table class="ov-master-table">
           <thead>

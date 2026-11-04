@@ -580,26 +580,13 @@ const Engine = (() => {
       });
     },
 
-    getSchedulePeriods: async (yearId) => {
+    getSchedulePeriodsSync: (yearId) => {
       const yid = String(yearId);
       if (isSandboxActive()) {
         const sDb = _getActiveDb();
-        return sDb.schedule_periods?.[yid] || {
-          provvisorio: { start_date: '', end_date: '' },
-          definitivo: { start_date: '', end_date: '' }
-        };
+        return sDb.schedule_periods?.[yid] || { provvisorio: { start_date: '', end_date: '' }, definitivo: { start_date: '', end_date: '' } };
       }
-      try {
-        const snap = await db.collection('system').doc(`schedule_periods_${yid}`).get();
-        if (snap.exists) {
-          const data = snap.data();
-          if (!_db.schedule_periods) _db.schedule_periods = {};
-          _db.schedule_periods[yid] = data;
-          return data;
-        }
-      } catch(e) {
-        console.warn('Errore lettura periodi cloud:', e);
-      }
+      if (_db.schedule_periods?.[yid]) return _db.schedule_periods[yid];
       const loc = localStorage.getItem(`sg_sched_periods_${yid}`);
       if (loc) {
         try {
@@ -609,6 +596,46 @@ const Engine = (() => {
           return parsed;
         } catch(e) {}
       }
+      return { provvisorio: { start_date: '', end_date: '' }, definitivo: { start_date: '', end_date: '' } };
+    },
+
+    getSchedulePeriods: async (yearId) => {
+      const yid = String(yearId);
+      if (isSandboxActive()) {
+        const sDb = _getActiveDb();
+        return sDb.schedule_periods?.[yid] || {
+          provvisorio: { start_date: '', end_date: '' },
+          definitivo: { start_date: '', end_date: '' }
+        };
+      }
+      // 1. Fallback immediato sincrono da memoria / cache locale (0 ms)
+      if (_db.schedule_periods?.[yid]) return _db.schedule_periods[yid];
+      const loc = localStorage.getItem(`sg_sched_periods_${yid}`);
+      if (loc) {
+        try {
+          const parsed = JSON.parse(loc);
+          if (!_db.schedule_periods) _db.schedule_periods = {};
+          _db.schedule_periods[yid] = parsed;
+          return parsed;
+        } catch(e) {}
+      }
+
+      // 2. Lettura Firestore con timeout di salvaguardia (max 1.5s per evitare qualsiasi freeze)
+      try {
+        const fetchPromise = db.collection('system').doc(`schedule_periods_${yid}`).get();
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 1500));
+        const snap = await Promise.race([fetchPromise, timeoutPromise]);
+        if (snap && snap.exists) {
+          const data = snap.data();
+          if (!_db.schedule_periods) _db.schedule_periods = {};
+          _db.schedule_periods[yid] = data;
+          localStorage.setItem(`sg_sched_periods_${yid}`, JSON.stringify(data));
+          return data;
+        }
+      } catch(e) {
+        // Fallback silenzioso
+      }
+
       return {
         provvisorio: { start_date: '', end_date: '' },
         definitivo: { start_date: '', end_date: '' }
