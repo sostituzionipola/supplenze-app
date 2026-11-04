@@ -6,6 +6,12 @@
 var ImportExportView = (() => {
   let _container = null, _state = null;
 
+  function fmtDate(d) {
+    if (!d) return '';
+    const parts = d.split('-');
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : d;
+  }
+
   async function render(container, state) {
     _container = container;
     _state = state;
@@ -24,15 +30,27 @@ var ImportExportView = (() => {
       return;
     }
 
-    // Carica stato organigramma
+    // Carica stato organigramma e periodi orario
     let orgData = null;
+    let periods = { provvisorio: { start_date: '', end_date: '' }, definitivo: { start_date: '', end_date: '' } };
     try {
       if (typeof OrganigrammaView !== 'undefined' && OrganigrammaView.loadData) {
         orgData = await OrganigrammaView.loadData();
       }
-    } catch(e) {
-      console.warn('Errore lettura organigramma:', e);
-    }
+    } catch(e) { console.warn('Errore lettura organigramma:', e); }
+
+    try {
+      periods = await API.get(`/schedule/periods?year_id=${state.yearId}`);
+      if (!periods) periods = { provvisorio: { start_date: '', end_date: '' }, definitivo: { start_date: '', end_date: '' } };
+    } catch(e) { console.warn('Errore lettura periodi orario:', e); }
+
+    const provLabel = (periods.provvisorio?.start_date && periods.provvisorio?.end_date)
+      ? `📅 Dal ${fmtDate(periods.provvisorio.start_date)} al ${fmtDate(periods.provvisorio.end_date)}`
+      : '⚠️ Vigenza non impostata';
+
+    const defLabel = (periods.definitivo?.start_date && periods.definitivo?.end_date)
+      ? `📅 Dal ${fmtDate(periods.definitivo.start_date)} al ${fmtDate(periods.definitivo.end_date)}`
+      : '⚠️ Vigenza non impostata';
 
     container.innerHTML = `
       <div class="page-header" style="margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border)">
@@ -43,31 +61,33 @@ var ImportExportView = (() => {
       </div>
 
       <div class="card mb-24" style="background:var(--bg-secondary); border-left:4px solid var(--accent); padding:14px 18px; margin-bottom:24px;">
-        <div style="font-size:13px; line-height:1.5;">
-          💡 <strong>Regole di caricamento:</strong> Tutti i file devono seguire i template ufficiali (.xlsx o .csv). 
-          L'anagrafica dei docenti e gli account istituzionali (<em>nome.cognome@padregemelli.net</em>) vengono sincronizzati automaticamente al caricamento dell'orario.
+        <div style="font-size:13px; line-height:1.6;">
+          💡 <strong>Regole di caricamento:</strong> Si consiglia di scaricare e seguire i template ufficiali (.xlsx o .csv). Se i file non rispettano l'esatta intestazione delle colonne e il formato predefinito, i dati non verranno caricati correttamente e verranno respinti dal sistema.
         </div>
       </div>
 
       <div class="grid grid-cols-1 md-grid-cols-2 lg-grid-cols-3 gap-24">
-        <!-- 1. ORARIO SCOLASTICO COMPLETO -->
+        <!-- 1. ORARIO PROVVISORIO -->
         <div class="card import_card" style="display:flex; flex-direction:column; border:1px solid var(--border-light); background:var(--bg-card);">
           <div class="card-header" style="background:var(--bg-secondary); border-bottom:1px solid var(--border)">
-            <h3 class="card-title">📅 Orario Scolastico (Completo)</h3>
+            <h3 class="card-title">⏳ Orario Provvisorio</h3>
           </div>
           <div class="card-body" style="flex:1; padding:20px; display:flex; flex-direction:column;">
-            <p style="font-size:12px; line-height:1.5; color:var(--text-secondary); margin-bottom:16px;">
-              Carica l'orario cattedra settimanale con classi, giorni e ore per tutti i docenti.
+            <p style="font-size:12px; line-height:1.5; color:var(--text-secondary); margin-bottom:12px;">
+              Carica l'orario provvisorio settimanale con il relativo periodo di vigenza. Durante questo periodo i docenti non possono inserire ore extra (R, DIS, ECC).
             </p>
+            <div style="font-size:11px; padding:6px 10px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border); margin-bottom:16px; color:var(--text-primary); font-weight:600;">
+              ${provLabel}
+            </div>
             <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
-              <button class="btn btn-primary" id="btn-imp-schedule" style="width:100%; justify-content:center; gap:8px;">
-                📥 Importa Orario
+              <button class="btn btn-primary" id="btn-imp-sched-prov" style="width:100%; justify-content:center; gap:8px;">
+                📥 Importa Orario Provvisorio
               </button>
               <div style="display:flex; gap:8px;">
-                <button class="btn btn-secondary btn-sm" id="btn-tmpl-schedule" style="flex:1; justify-content:center;">
+                <button class="btn btn-secondary btn-sm" id="btn-tmpl-sched-prov" style="flex:1; justify-content:center;">
                   📄 Template (.xlsx)
                 </button>
-                <button class="btn btn-secondary btn-sm" id="btn-exp-schedule" style="flex:1; justify-content:center;">
+                <button class="btn btn-secondary btn-sm" id="btn-exp-sched-prov" style="flex:1; justify-content:center;">
                   📤 Esporta
                 </button>
               </div>
@@ -75,7 +95,60 @@ var ImportExportView = (() => {
           </div>
         </div>
 
-        <!-- 2. ORE DI RICEVIMENTO -->
+        <!-- 2. ORARIO DEFINITIVO -->
+        <div class="card import_card" style="display:flex; flex-direction:column; border:1px solid var(--border-light); background:var(--bg-card);">
+          <div class="card-header" style="background:var(--bg-secondary); border-bottom:1px solid var(--border)">
+            <h3 class="card-title">📅 Orario Definitivo</h3>
+          </div>
+          <div class="card-body" style="flex:1; padding:20px; display:flex; flex-direction:column;">
+            <p style="font-size:12px; line-height:1.5; color:var(--text-secondary); margin-bottom:12px;">
+              Carica l'orario definitivo dell'istituto con il rispettivo periodo. Abilita la facoltà dei docenti di inserire e gestire disponibilità, ricevimenti ed eccedenze.
+            </p>
+            <div style="font-size:11px; padding:6px 10px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border); margin-bottom:16px; color:var(--text-primary); font-weight:600;">
+              ${defLabel}
+            </div>
+            <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
+              <button class="btn btn-primary" id="btn-imp-sched-def" style="width:100%; justify-content:center; gap:8px;">
+                📥 Importa Orario Definitivo
+              </button>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-secondary btn-sm" id="btn-tmpl-sched-def" style="flex:1; justify-content:center;">
+                  📄 Template (.xlsx)
+                </button>
+                <button class="btn btn-secondary btn-sm" id="btn-exp-sched-def" style="flex:1; justify-content:center;">
+                  📤 Esporta
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. ORE DA RECUPERARE / DEBITO (Subito dopo/sotto orario definitivo) -->
+        <div class="card import_card" style="display:flex; flex-direction:column; border:1px solid var(--border-light); background:var(--bg-card);">
+          <div class="card-header" style="background:var(--bg-secondary); border-bottom:1px solid var(--border)">
+            <h3 class="card-title">📊 Ore da Recuperare / Debito</h3>
+          </div>
+          <div class="card-body" style="flex:1; padding:20px; display:flex; flex-direction:column;">
+            <p style="font-size:12px; line-height:1.5; color:var(--text-secondary); margin-bottom:16px;">
+              Carica e aggiorna i saldi iniziali del debito orario docenti per l'anno scolastico in corso.
+            </p>
+            <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
+              <button class="btn btn-primary" id="btn-imp-debt" style="width:100%; justify-content:center; gap:8px;">
+                ⚖️ Importa Debiti
+              </button>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-secondary btn-sm" id="btn-tmpl-debt" style="flex:1; justify-content:center;">
+                  📄 Template Debiti (.xlsx)
+                </button>
+                <button class="btn btn-secondary btn-sm" id="btn-exp-debt" style="flex:1; justify-content:center;">
+                  📤 Esporta Debiti
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. ORE DI RICEVIMENTO (R) -->
         <div class="card import_card" style="display:flex; flex-direction:column; border:1px solid var(--border-light); background:var(--bg-card);">
           <div class="card-header" style="background:var(--bg-secondary); border-bottom:1px solid var(--border)">
             <h3 class="card-title">🤝 Ore di Ricevimento (R)</h3>
@@ -88,14 +161,19 @@ var ImportExportView = (() => {
               <button class="btn btn-primary" id="btn-imp-ricevimento" style="width:100%; justify-content:center; gap:8px;">
                 📥 Importa Ricevimenti
               </button>
-              <button class="btn btn-secondary btn-sm" id="btn-tmpl-ricevimento" style="width:100%; justify-content:center;">
-                📄 Template Ricevimenti (.xlsx)
-              </button>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-secondary btn-sm" id="btn-tmpl-ricevimento" style="flex:1; justify-content:center;">
+                  📄 Template R (.xlsx)
+                </button>
+                <button class="btn btn-secondary btn-sm" id="btn-exp-ricevimento" style="flex:1; justify-content:center;">
+                  📤 Esporta Ricevimenti
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- 3. DISPONIBILITÀ (DIS) -->
+        <!-- 5. DISPONIBILITÀ (DIS) -->
         <div class="card import_card" style="display:flex; flex-direction:column; border:1px solid var(--border-light); background:var(--bg-card);">
           <div class="card-header" style="background:var(--bg-secondary); border-bottom:1px solid var(--border)">
             <h3 class="card-title">⚡ Disponibilità (DIS)</h3>
@@ -108,14 +186,19 @@ var ImportExportView = (() => {
               <button class="btn btn-primary" id="btn-imp-dis" style="width:100%; justify-content:center; gap:8px;">
                 📥 Importa Disponibilità (DIS)
               </button>
-              <button class="btn btn-secondary btn-sm" id="btn-tmpl-dis" style="width:100%; justify-content:center;">
-                📄 Template DIS (.xlsx)
-              </button>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-secondary btn-sm" id="btn-tmpl-dis" style="flex:1; justify-content:center;">
+                  📄 Template DIS (.xlsx)
+                </button>
+                <button class="btn btn-secondary btn-sm" id="btn-exp-dis" style="flex:1; justify-content:center;">
+                  📤 Esporta DIS
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- 4. ORE ECCEDENTI (ECC) -->
+        <!-- 6. ORE ECCEDENTI (ECC) -->
         <div class="card import_card" style="display:flex; flex-direction:column; border:1px solid var(--border-light); background:var(--bg-card);">
           <div class="card-header" style="background:var(--bg-secondary); border-bottom:1px solid var(--border)">
             <h3 class="card-title">💜 Ore Eccedenti (ECC)</h3>
@@ -128,21 +211,26 @@ var ImportExportView = (() => {
               <button class="btn btn-primary" id="btn-imp-ecc" style="width:100%; justify-content:center; gap:8px;">
                 📥 Importa Ore Eccedenti (ECC)
               </button>
-              <button class="btn btn-secondary btn-sm" id="btn-tmpl-ecc" style="width:100%; justify-content:center;">
-                📄 Template ECC (.xlsx)
-              </button>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-secondary btn-sm" id="btn-tmpl-ecc" style="flex:1; justify-content:center;">
+                  📄 Template ECC (.xlsx)
+                </button>
+                <button class="btn btn-secondary btn-sm" id="btn-exp-ecc" style="flex:1; justify-content:center;">
+                  📤 Esporta ECC
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- 5. ORGANIGRAMMA DI ISTITUTO -->
+        <!-- 7. ORGANIGRAMMA DI ISTITUTO -->
         <div class="card import_card" style="display:flex; flex-direction:column; border:1px solid var(--border-light); background:var(--bg-card);">
           <div class="card-header" style="background:var(--bg-secondary); border-bottom:1px solid var(--border)">
             <h3 class="card-title">🏛️ Organigramma di Istituto</h3>
           </div>
           <div class="card-body" style="flex:1; padding:20px; display:flex; flex-direction:column;">
             <p style="font-size:12px; line-height:1.5; color:var(--text-secondary); margin-bottom:12px;">
-              Carica il documento PDF ufficiale con commissioni, coordinatori e figure di riferimento.
+              Carica il documento PDF ufficiale con commissioni, coordinatori e figure di riferimento del plesso.
             </p>
             <div style="margin-bottom:16px; font-size:12px; padding:8px 12px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border);">
               ${orgData?.filename ? `
@@ -177,7 +265,7 @@ var ImportExportView = (() => {
           </div>
         </div>
 
-        <!-- 6. ANAGRAFICA DOCENTI -->
+        <!-- 8. ANAGRAFICA DOCENTI -->
         <div class="card import_card" style="display:flex; flex-direction:column; border:1px solid var(--border-light); background:var(--bg-card);">
           <div class="card-header" style="background:var(--bg-secondary); border-bottom:1px solid var(--border)">
             <h3 class="card-title">👨‍🏫 Anagrafica Docenti</h3>
@@ -190,35 +278,20 @@ var ImportExportView = (() => {
               <button class="btn btn-primary" id="btn-view-teachers" style="width:100%; justify-content:center; gap:8px;">
                 👁️ Consulta Anagrafica
               </button>
-              <button class="btn btn-secondary btn-sm" id="btn-exp-teachers" style="width:100%; justify-content:center; gap:8px;">
-                📤 Esporta Anagrafica (.xlsx)
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 7. ORE DA RECUPERARE / DEBITO -->
-        <div class="card import_card" style="display:flex; flex-direction:column; border:1px solid var(--border-light); background:var(--bg-card);">
-          <div class="card-header" style="background:var(--bg-secondary); border-bottom:1px solid var(--border)">
-            <h3 class="card-title">📊 Ore da Recuperare / Debito</h3>
-          </div>
-          <div class="card-body" style="flex:1; padding:20px; display:flex; flex-direction:column;">
-            <p style="font-size:12px; line-height:1.5; color:var(--text-secondary); margin-bottom:16px;">
-              Carica e aggiorna i saldi iniziali del debito orario docenti per l'anno scolastico in corso.
-            </p>
-            <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
-              <button class="btn btn-primary" id="btn-imp-debt" style="width:100%; justify-content:center; gap:8px;">
-                ⚖️ Importa Debiti
-              </button>
-              <button class="btn btn-secondary btn-sm" id="btn-exp-debt" style="width:100%; justify-content:center;">
-                📤 Esporta Debiti (.xlsx)
-              </button>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-secondary btn-sm" id="btn-tmpl-teachers" style="flex:1; justify-content:center;">
+                  📄 Template Docenti (.xlsx)
+                </button>
+                <button class="btn btn-secondary btn-sm" id="btn-exp-teachers" style="flex:1; justify-content:center;">
+                  📤 Esporta Anagrafica
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- OPZIONE B: ZONA PERICOLOSA / MANUTENZIONE & RESET DATI -->
+      <!-- ZONA PERICOLOSA (DANGER ZONE) - NESSUN RESET CUMULATIVO -->
       <div class="card mt-24" style="margin-top:32px; border:2px solid #ef4444; background:rgba(239, 68, 68, 0.04); border-radius:8px;">
         <div class="card-header" style="background:rgba(239, 68, 68, 0.1); border-bottom:1px solid rgba(239, 68, 68, 0.2); padding:14px 20px;">
           <h3 class="card-title" style="color:#ef4444; font-size:15px; display:flex; align-items:center; gap:8px;">
@@ -231,9 +304,12 @@ var ImportExportView = (() => {
             <span style="color:var(--text-primary); font-weight:600;">Nota di sicurezza:</span> L'anagrafica, i profili e le email dei docenti <strong>NON</strong> vengono cancellati, garantendo la continuità degli account.
           </p>
 
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
-            <button class="btn btn-ghost" id="btn-danger-clear-all" style="color:#ffffff; background:#dc2626; border:1px solid #b91c1c; justify-content:center; padding:10px 14px; font-weight:600;">
-              🗑️ Svuota Intero Orario
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+            <button class="btn btn-ghost" id="btn-danger-clear-prov" style="color:#ffffff; background:#dc2626; border:1px solid #b91c1c; justify-content:center; padding:10px 14px; font-weight:600;">
+              🗑️ Svuota Orario Provvisorio
+            </button>
+            <button class="btn btn-ghost" id="btn-danger-clear-def" style="color:#ffffff; background:#b91c1c; border:1px solid #991b1b; justify-content:center; padding:10px 14px; font-weight:600;">
+              🗑️ Svuota Orario Definitivo
             </button>
             <button class="btn btn-ghost" id="btn-danger-clear-r" style="color:#dc2626; border:1px solid #dc2626; justify-content:center; padding:10px 14px;">
               🗑️ Svuota solo Ricevimenti (R)
@@ -249,22 +325,52 @@ var ImportExportView = (() => {
       </div>
     `;
 
-    // ── GESTORI EVENTI IMPORTAZIONE & TEMPLATE ──
-    container.querySelector('#btn-imp-schedule').onclick = () => {
+    // ── GESTORI ORARIO PROVVISORIO ──
+    container.querySelector('#btn-imp-sched-prov').onclick = () => {
       ScheduleView.showImportModal(state, () => {
-        APP.toast('Orario scolastico aggiornato con successo', 'success');
+        APP.toast('Orario provvisorio aggiornato con successo', 'success');
         render(container, state);
-      }, 'orario');
+      }, 'orario', 'provvisorio');
     };
 
-    container.querySelector('#btn-tmpl-schedule').onclick = () => {
+    container.querySelector('#btn-tmpl-sched-prov').onclick = () => {
       ScheduleView.downloadTemplate('orario');
     };
 
-    container.querySelector('#btn-exp-schedule').onclick = () => {
-      ScheduleView.openExportModal();
+    container.querySelector('#btn-exp-sched-prov').onclick = () => {
+      ScheduleView.exportScheduleMatrix('provvisorio', state.yearId);
     };
 
+    // ── GESTORI ORARIO DEFINITIVO ──
+    container.querySelector('#btn-imp-sched-def').onclick = () => {
+      ScheduleView.showImportModal(state, () => {
+        APP.toast('Orario definitivo aggiornato con successo', 'success');
+        render(container, state);
+      }, 'orario', 'definitivo');
+    };
+
+    container.querySelector('#btn-tmpl-sched-def').onclick = () => {
+      ScheduleView.downloadTemplate('orario');
+    };
+
+    container.querySelector('#btn-exp-sched-def').onclick = () => {
+      ScheduleView.exportScheduleMatrix('definitivo', state.yearId);
+    };
+
+    // ── GESTORI DEBITI ──
+    container.querySelector('#btn-imp-debt').onclick = () => {
+      TeachersView.openImportModal(true);
+    };
+
+    container.querySelector('#btn-tmpl-debt').onclick = () => {
+      TeachersView.downloadDebtTemplate();
+    };
+
+    container.querySelector('#btn-exp-debt').onclick = () => {
+      TeachersView.openExportModal(true);
+    };
+
+    // ── GESTORI RICEVIMENTI ──
     container.querySelector('#btn-imp-ricevimento').onclick = () => {
       ScheduleView.showImportModal(state, () => {
         APP.toast('Ore di ricevimento aggiornate con successo', 'success');
@@ -276,6 +382,11 @@ var ImportExportView = (() => {
       ScheduleView.downloadTemplate('ricevimento');
     };
 
+    container.querySelector('#btn-exp-ricevimento').onclick = () => {
+      ScheduleView.exportFilteredSchedule('R', state.yearId);
+    };
+
+    // ── GESTORI DISPONIBILITÀ (DIS) ──
     container.querySelector('#btn-imp-dis').onclick = () => {
       ScheduleView.showImportModal(state, () => {
         APP.toast('Disponibilità (DIS) aggiornate con successo', 'success');
@@ -287,6 +398,11 @@ var ImportExportView = (() => {
       ScheduleView.downloadTemplate('dis');
     };
 
+    container.querySelector('#btn-exp-dis').onclick = () => {
+      ScheduleView.exportFilteredSchedule('DIS', state.yearId);
+    };
+
+    // ── GESTORI ORE ECCEDENTI (ECC) ──
     container.querySelector('#btn-imp-ecc').onclick = () => {
       ScheduleView.showImportModal(state, () => {
         APP.toast('Ore eccedenti (ECC) aggiornate con successo', 'success');
@@ -298,11 +414,14 @@ var ImportExportView = (() => {
       ScheduleView.downloadTemplate('ecc');
     };
 
-    // ── GESTORI ANAGRAFICA & DEBITI ──
+    container.querySelector('#btn-exp-ecc').onclick = () => {
+      ScheduleView.exportFilteredSchedule('ECC', state.yearId);
+    };
+
+    // ── GESTORI ANAGRAFICA DOCENTI ──
     container.querySelector('#btn-view-teachers')?.addEventListener('click', () => APP.navigate('teachers'));
+    container.querySelector('#btn-tmpl-teachers')?.addEventListener('click', () => TeachersView.downloadTeacherTemplate());
     container.querySelector('#btn-exp-teachers')?.addEventListener('click', () => TeachersView.openExportModal());
-    container.querySelector('#btn-imp-debt')?.addEventListener('click', () => TeachersView.openImportModal(true));
-    container.querySelector('#btn-exp-debt')?.addEventListener('click', () => TeachersView.openExportModal(true));
 
     // ── GESTORI ORGANIGRAMMA ──
     const orgInput = container.querySelector('#org-import-file-input');
@@ -368,17 +487,34 @@ var ImportExportView = (() => {
       };
     }
 
-    // ── GESTORI ZONA PERICOLOSA (OPZIONE B) ──
-    container.querySelector('#btn-danger-clear-all').onclick = async () => {
+    // ── GESTORI ZONA PERICOLOSA (CHIRURGICI & SEPARATI) ──
+    container.querySelector('#btn-danger-clear-prov').onclick = async () => {
       const ok = await APP.confirm(
-        '⚠️ ATTENZIONE: Sei sicuro di voler SVUOTARE COMPLETAMENTE l\'orario scolastico per l\'anno selezionato?\n\n' +
-        'Verranno eliminati TUTTI gli slot di lezione, disponibilità, eccedenze e ricevimenti.\n' +
-        'L\'anagrafica dei docenti NON verrà toccata.\n\nProcedere?'
+        '⚠️ Sei sicuro di voler SVUOTARE L\'ORARIO PROVVISORIO per questo anno scolastico?\n\n' +
+        'Verranno eliminati solo gli slot dell\'orario provvisorio e resettate le relative date di vigenza.\n' +
+        'L\'orario definitivo, i docenti e le altre tabelle non verranno toccati.\n\nProcedere?'
       );
       if (ok) {
         try {
-          await API.del(`/schedule/all?year_id=${state.yearId}`);
-          APP.toast('Intero orario scolastico svuotato con successo', 'success');
+          await API.del(`/schedule/clear?year_id=${state.yearId}&type=provvisorio`);
+          APP.toast('Orario provvisorio svuotato con successo', 'success');
+          render(container, state);
+        } catch(e) {
+          APP.toast('Errore: ' + e.message, 'error');
+        }
+      }
+    };
+
+    container.querySelector('#btn-danger-clear-def').onclick = async () => {
+      const ok = await APP.confirm(
+        '⚠️ Sei sicuro di voler SVUOTARE L\'ORARIO DEFINITIVO per questo anno scolastico?\n\n' +
+        'Verranno eliminati solo gli slot dell\'orario definitivo e resettate le relative date di vigenza.\n' +
+        'L\'orario provvisorio e i docenti non verranno toccati.\n\nProcedere?'
+      );
+      if (ok) {
+        try {
+          await API.del(`/schedule/clear?year_id=${state.yearId}&type=definitivo`);
+          APP.toast('Orario definitivo svuotato con successo', 'success');
           render(container, state);
         } catch(e) {
           APP.toast('Errore: ' + e.message, 'error');

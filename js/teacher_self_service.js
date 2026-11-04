@@ -522,24 +522,44 @@ var TeacherSelfServiceView = (() => {
       // Re-fetch teacher to get latest lock status
       const teachers = await API.get(`/teachers?year_id=${_yearId}`);
       _teacher = teachers.find(t => t.id == _teacherId);
-      const isLocked = _teacher?.availability_locked;
+      
+      // Verifica se l'orario provvisorio è attualmente in vigore
+      let isProvvisorioActive = false;
+      try {
+        const periods = await API.get(`/schedule/periods?year_id=${_yearId}`);
+        const todayStr = new Date().toISOString().slice(0, 10);
+        if (periods?.provvisorio?.start_date && periods?.provvisorio?.end_date) {
+          if (todayStr >= periods.provvisorio.start_date && todayStr <= periods.provvisorio.end_date) {
+            isProvvisorioActive = true;
+          }
+        }
+      } catch(e) { console.warn('Controllo periodo:', e); }
+
+      const isLocked = _teacher?.availability_locked || isProvvisorioActive;
 
       const schedule = await API.get(`/schedule?year_id=${_yearId}`);
       const mySlots = schedule.filter(s => s.teacher_id == _teacherId);
       
       const allHours = [8,9,10,11,12,13,14,15];
       
+      let statusHint = '';
+      if (isProvvisorioActive) {
+        statusHint = '<span style="color:#f59e0b; font-weight:600;">⏳ Orario Provvisorio in Vigore</span> (La compilazione di Ricevimenti, DIS ed ECC è disabilitata durante l\'orario provvisorio)';
+      } else if (isLocked) {
+        statusHint = '<span style="color:#16a34a; font-weight:600;">✅ Scelte Inviate e Protette</span> (Contatta la segreteria per modifiche)';
+      } else {
+        statusHint = '<span style="color:var(--accent); font-weight:600;">✏️ Fase di Compilazione</span>: Clicca sugli slot vuoti per indicare disponibilità o ricevimento';
+      }
+
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
           <div>
             <h4 style="margin:0; font-size:14px;">📋 Il Mio Orario Personale</h4>
             <p style="margin:2px 0 0 0; font-size:11px; color:var(--text-secondary);">
-              ${isLocked 
-                ? '<span style="color:#16a34a; font-weight:600;">✅ Scelte Inviate e Protette</span> (Contatta la segreteria per modifiche)' 
-                : '<span style="color:var(--accent); font-weight:600;">✏️ Fase di Compilazione</span>: Clicca sugli slot vuoti per indicare disponibilità o ricevimento'}
+              ${statusHint}
             </p>
           </div>
-          ${!isLocked ? `<button class="btn btn-primary btn-sm" id="ts-submit-availability" style="background:#16a34a; border-color:#16a34a; font-weight:700;">📤 Invia alla Segreteria</button>` : ''}
+          ${(!isLocked && !isProvvisorioActive) ? `<button class="btn btn-primary btn-sm" id="ts-submit-availability" style="background:#16a34a; border-color:#16a34a; font-weight:700;">📤 Invia alla Segreteria</button>` : ''}
         </div>
         
         <div class="table-wrapper"><table style="border-collapse:collapse; width:100%; font-size:12px;">

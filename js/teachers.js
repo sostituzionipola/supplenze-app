@@ -856,16 +856,33 @@ var TeachersView = (() => {
         const row = rows[i];
         if (!row || !row[0]) continue;
         
-        const name = String(row[0]).trim().toUpperCase();
-        const rawTotal = parseInt(row[1]) || 0;
-        const subject = row[2] ? String(row[2]).trim().toUpperCase() : '';
-        let classes = row[3] ? String(row[3]).trim().toUpperCase() : '';
+        let name = '';
+        let rawTotal = 0;
+        let subject = '';
+        let classes = '';
+
+        if (row.length >= 3 && !isNaN(parseInt(row[2])) && isNaN(parseInt(row[1]))) {
+          // Formato template a 3 colonne: COGNOMI, NOMI, ORE
+          name = `${String(row[0]).trim()} ${String(row[1]).trim()}`.toUpperCase();
+          rawTotal = parseInt(row[2]) || 0;
+          subject = row[3] ? String(row[3]).trim().toUpperCase() : '';
+          classes = row[4] ? String(row[4]).trim().toUpperCase() : '';
+        } else {
+          name = String(row[0]).trim().toUpperCase();
+          rawTotal = parseInt(row[1]) || 0;
+          subject = row[2] ? String(row[2]).trim().toUpperCase() : '';
+          classes = row[3] ? String(row[3]).trim().toUpperCase() : '';
+        }
         
         // Divisione logica
         const hours_subs = Math.floor(rawTotal / 2);
         const hours_trips = Math.ceil(rawTotal / 2); // Il dispari va in eccesso alle uscite
 
-        const existing = _teachers.find(t => t.name === name);
+        const existing = _teachers.find(t => {
+          const tn = (t.name || '').toUpperCase().trim();
+          return tn === name || 
+                 (row[1] && tn === `${String(row[1]).trim()} ${String(row[0]).trim()}`.toUpperCase());
+        });
         if (existing) {
           // Incrocio su schedule!
           const mySlots = scheduleSlots.filter(s => s.teacher_id === existing.id && s.slot_type === 'normal');
@@ -1253,5 +1270,53 @@ var TeachersView = (() => {
     }
   }
 
-  return { render, openModal, openHistoryPopup, exportAll, openExportModal, openImportModal, adjustHours, toggleAvail, deleteTeacher, renderRecuperi, exportSection, handleImport, deleteLongTerm };
+  function downloadDebtTemplate() {
+    const data = [
+      ['COGNOMI', 'NOMI', 'ORE_DA_RECUPERARE'],
+      ['ROSSI BIANCHI', 'MARIA GRAZIA', 14],
+      ['VERDI', 'GIUSEPPE', 8]
+    ];
+    try {
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = [{ wch: 22 }, { wch: 20 }, { wch: 20 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Template Debiti");
+      XLSX.writeFile(wb, "template_debiti_orari.xlsx");
+      APP.toast('Template Debiti Orari scaricato', 'success');
+    } catch(e) {
+      console.error(e);
+      const csv = data.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'template_debiti_orari.csv';
+      a.click();
+    }
+  }
+
+  function downloadTeacherTemplate() {
+    const data = [
+      ['MATERIA', 'COGNOMI', 'NOMI', 'EMAIL'],
+      ['LETTERE', 'ROSSI BIANCHI', 'MARIA GRAZIA', 'mariagrazia.rossibianchi@padregemelli.net'],
+      ['MATEMATICA', 'VERDI', 'GIUSEPPE', 'giuseppe.verdi@padregemelli.net']
+    ];
+    try {
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = [{ wch: 18 }, { wch: 22 }, { wch: 20 }, { wch: 35 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Template Docenti");
+      XLSX.writeFile(wb, "template_anagrafica_docenti.xlsx");
+      APP.toast('Template Anagrafica Docenti scaricato', 'success');
+    } catch(e) {
+      console.error(e);
+      const csv = data.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'template_anagrafica_docenti.csv';
+      a.click();
+    }
+  }
+
+  return { render, openModal, openHistoryPopup, exportAll, openExportModal, openImportModal, downloadDebtTemplate, downloadTeacherTemplate, adjustHours, toggleAvail, deleteTeacher, renderRecuperi, exportSection, handleImport, deleteLongTerm };
 })();

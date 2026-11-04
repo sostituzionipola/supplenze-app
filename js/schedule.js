@@ -103,22 +103,41 @@ var ScheduleView = (() => {
     return `${cNomi}.${cCognomi}@padregemelli.net`;
   }
 
-  function showImportModal(state, cb, defaultType = 'orario') {
-    let title = 'Importa Orario Docenti';
+  function showImportModal(state, cb, defaultType = 'orario', scheduleType = 'definitivo') {
+    let title = scheduleType === 'provvisorio' ? '⏳ Importa Orario Provvisorio' : '📅 Importa Orario Definitivo';
     let hint = 'Usa <strong>DIS</strong> per disponibilità, <strong>ECC</strong> per eccedenze o <strong>R</strong> per ricevimenti.';
     if (defaultType === 'ricevimento' || defaultType === 'R') {
-      title = 'Importa Ore di Ricevimento (R)';
+      title = '🤝 Importa Ore di Ricevimento (R)';
       hint = 'Inserisci <strong>R</strong> nelle celle corrispondenti all\'ora di ricevimento dei docenti.';
     } else if (defaultType === 'dis' || defaultType === 'DIS') {
-      title = 'Importa Ore a Disposizione (DIS)';
+      title = '⚡ Importa Ore a Disposizione (DIS)';
       hint = 'Inserisci <strong>DIS</strong> nelle celle in cui il docente è a disposizione per supplenze.';
     } else if (defaultType === 'ecc' || defaultType === 'ECC') {
-      title = 'Importa Ore Eccedenti (ECC)';
+      title = '💜 Importa Ore Eccedenti (ECC)';
       hint = 'Inserisci <strong>ECC</strong> nelle celle corrispondenti alle ore eccedenti cattedra.';
     }
 
+    const isSchedule = defaultType === 'orario';
+
     const body = `
       <div class="p-12" style="max-width:100%;">
+        ${isSchedule ? `
+          <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:8px; padding:12px 16px; margin-bottom:16px;">
+            <div style="font-weight:600; font-size:12px; margin-bottom:8px; color:var(--accent);">
+              📅 Periodo di Vigenza (${scheduleType === 'provvisorio' ? 'Orario Provvisorio' : 'Orario Definitivo'})
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:11px; display:block; margin-bottom:4px; color:var(--text-secondary);">Data Inizio Validità</label>
+                <input type="date" id="m-period-start" class="form-control" style="width:100%; font-size:12px;" />
+              </div>
+              <div>
+                <label style="font-size:11px; display:block; margin-bottom:4px; color:var(--text-secondary);">Data Fine Validità</label>
+                <input type="date" id="m-period-end" class="form-control" style="width:100%; font-size:12px;" />
+              </div>
+            </div>
+          </div>
+        ` : ''}
         <p style="font-size:13px; margin-bottom:12px">
           Carica un file <strong>Excel (.xlsx, .xls)</strong> o <strong>CSV</strong> compilato con il template ufficiale.<br/>
           La prima riga contiene i <strong>GIORNI</strong>, la seconda le <strong>ORE</strong>.<br/>
@@ -142,12 +161,43 @@ var ScheduleView = (() => {
     const status = ov.querySelector('#import-status');
     const tmplBtn = ov.querySelector('#btn-modal-tmpl');
     if (tmplBtn) tmplBtn.onclick = () => downloadTemplate(defaultType);
+
+    // Precarica periodi esistenti
+    if (isSchedule) {
+      API.get(`/schedule/periods?year_id=${state.yearId}`).then(periods => {
+        if (periods && periods[scheduleType]) {
+          const s = periods[scheduleType].start_date || '';
+          const e = periods[scheduleType].end_date || '';
+          if (ov.querySelector('#m-period-start')) ov.querySelector('#m-period-start').value = s;
+          if (ov.querySelector('#m-period-end')) ov.querySelector('#m-period-end').value = e;
+        }
+      }).catch(err => console.warn('Errore precaricamento periodi:', err));
+    }
+
     dz.onclick = () => fi.click();
-    fi.onchange = (e) => handleFile(e.target.files[0], state, status, cb);
+    fi.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (isSchedule) {
+        const sDate = ov.querySelector('#m-period-start')?.value || '';
+        const eDate = ov.querySelector('#m-period-end')?.value || '';
+        try {
+          await API.put('/schedule/periods', {
+            school_year_id: state.yearId,
+            type: scheduleType,
+            start_date: sDate,
+            end_date: eDate
+          });
+        } catch(err) {
+          console.warn('Errore salvataggio date periodo:', err);
+        }
+      }
+      handleFile(file, state, status, cb, scheduleType);
+    };
     ov.querySelector('#m-imp-close').onclick = () => ov.remove();
   }
 
-  async function handleFile(file, state, statusEl, cb) {
+  async function handleFile(file, state, statusEl, cb, scheduleType = 'definitivo') {
     if (!file) return;
     statusEl.innerHTML = '<div class="spinner"></div> Elaborazione in corso...';
     const reader = new FileReader();
@@ -232,7 +282,7 @@ var ScheduleView = (() => {
             const { day, hour } = colMap[colIdx];
             const val = String(row[colIdx] || '').trim();
             if (val !== undefined && val !== 'undefined') {
-              await API.put('/schedule/slot', { teacher_id: teacher.id, day, hour, raw_value: val, school_year_id: state.yearId });
+              await API.put('/schedule/slot', { teacher_id: teacher.id, day, hour, raw_value: val, school_year_id: state.yearId, schedule_type: scheduleType });
               count++;
             }
           }
@@ -540,5 +590,111 @@ var ScheduleView = (() => {
     win.document.close();
   }
 
-  return { render, downloadTemplate, showImportModal, openExportModal: exportCurrentView, exportFullPdf };
+  async function exportFilteredSchedule(type, yearId) {
+    try {
+      const yid = yearId || _yearId;
+      const teachers = await API.get(`/teachers?year_id=${yid}`);
+      const schedule = await API.get(`/schedule?year_id=${yid}`);
+
+      let label = 'Ricevimenti';
+      let checkVal = 'R';
+      let fileName = 'elenco_ricevimenti_docenti.xlsx';
+
+      if (type === 'DIS') {
+        label = 'Disponibilità (DIS)';
+        checkVal = 'DIS';
+        fileName = 'elenco_disponibilita_dis.xlsx';
+      } else if (type === 'ECC') {
+        label = 'Ore Eccedenti (ECC)';
+        checkVal = 'ECC';
+        fileName = 'elenco_ore_eccedenti_ecc.xlsx';
+      }
+
+      const rows = [
+        ['MATERIA', 'DOCENTE', 'GIORNO', 'ORA', 'TIPO']
+      ];
+
+      teachers.forEach(t => {
+        const slots = schedule.filter(s => s.teacher_id == t.id && (
+          (s.raw_value || '').toUpperCase() === checkVal ||
+          (type === 'R' && s.slot_type === 'ricevimento') ||
+          (type === 'DIS' && s.slot_type === 'disponibile') ||
+          (type === 'ECC' && s.slot_type === 'eccedente')
+        ));
+        slots.forEach(s => {
+          rows.push([
+            (t.subject || '').toUpperCase(),
+            t.name.toUpperCase(),
+            s.day,
+            s.hour + 'ª',
+            checkVal
+          ]);
+        });
+      });
+
+      if (rows.length === 1) {
+        APP.toast(`Nessun dato di ${label} trovato per questo anno`, 'warning');
+        return;
+      }
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [{ wch: 18 }, { wch: 25 }, { wch: 15 }, { wch: 10 }, { wch: 10 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, label);
+      XLSX.writeFile(wb, fileName);
+      APP.toast(`Elenco ${label} esportato con successo`, 'success');
+    } catch(e) {
+      console.error(e);
+      APP.toast('Errore esportazione: ' + e.message, 'error');
+    }
+  }
+
+  async function exportScheduleMatrix(scheduleType, yearId) {
+    try {
+      const yid = yearId || _yearId;
+      const teachers = await API.get(`/teachers?year_id=${yid}`);
+      const schedule = await API.get(`/schedule?year_id=${yid}`);
+      const filteredSched = schedule.filter(s => (s.schedule_type || 'definitivo') === scheduleType);
+
+      const days = ['LUNEDI', 'MARTEDI', 'MERCOLEDI', 'GIOVEDI', 'VENERDI'];
+      const headerRow1 = ['MATERIA', 'DOCENTE'];
+      const headerRow2 = ['', ''];
+
+      days.forEach(d => {
+        const hours = HOURS_BY_DAY[d] || [8,9,10,11,12,13,14,15];
+        hours.forEach((h, idx) => {
+          headerRow1.push(idx === 0 ? d : '');
+          headerRow2.push(h + 'ª');
+        });
+      });
+
+      const data = [headerRow1, headerRow2];
+
+      teachers.forEach(t => {
+        const row = [(t.subject || '').toUpperCase(), t.name.toUpperCase()];
+        days.forEach(d => {
+          const hours = HOURS_BY_DAY[d] || [8,9,10,11,12,13,14,15];
+          hours.forEach(h => {
+            const slot = filteredSched.find(s => s.teacher_id == t.id && s.day === d && s.hour == h);
+            row.push(slot ? (slot.raw_value || '') : '');
+          });
+        });
+        data.push(row);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = [{ wch: 18 }, { wch: 25 }];
+      const wb = XLSX.utils.book_new();
+      const sheetTitle = scheduleType === 'provvisorio' ? 'Orario Provvisorio' : 'Orario Definitivo';
+      const fileTitle = scheduleType === 'provvisorio' ? 'orario_provvisorio.xlsx' : 'orario_definitivo.xlsx';
+      XLSX.utils.book_append_sheet(wb, ws, sheetTitle);
+      XLSX.writeFile(wb, fileTitle);
+      APP.toast(`${sheetTitle} esportato con successo`, 'success');
+    } catch(e) {
+      console.error(e);
+      APP.toast('Errore esportazione: ' + e.message, 'error');
+    }
+  }
+
+  return { render, downloadTemplate, showImportModal, openExportModal: exportCurrentView, exportFullPdf, exportFilteredSchedule, exportScheduleMatrix };
 })();

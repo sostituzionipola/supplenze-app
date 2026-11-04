@@ -511,18 +511,19 @@ const Engine = (() => {
     },
 
     // ── ORARIO ──
-    getSchedule: (yearId, teacherId, day) => {
+    getSchedule: (yearId, teacherId, day, scheduleType) => {
       const currentDb = _getActiveDb();
       const yid = Number(yearId);
       const tid = teacherId ? Number(teacherId) : null;
       return currentDb.schedule.filter(s => 
         Number(s.school_year_id) === yid && 
         (!tid || Number(s.teacher_id) === tid) &&
-        (!day || s.day === day.toUpperCase())
+        (!day || s.day === day.toUpperCase()) &&
+        (!scheduleType || s.schedule_type === scheduleType || (!s.schedule_type && scheduleType === 'definitivo'))
       ).sort((a,b) => a.hour - b.hour);
     },
     updateSlot: async (slot) => {
-      const { teacher_id, day, hour, raw_value, school_year_id } = slot;
+      const { teacher_id, day, hour, raw_value, school_year_id, schedule_type = 'definitivo' } = slot;
       const currentDb = _getActiveDb();
       const classes = currentDb.classes.filter(c => c.school_year_id == school_year_id);
       let slot_type = 'empty', class_id = null;
@@ -541,20 +542,67 @@ const Engine = (() => {
 
       if (isSandboxActive()) {
         const sDb = _getActiveDb();
-        const existing = sDb.schedule.find(s => s.teacher_id == teacher_id && s.day == day && s.hour == hour && s.school_year_id == school_year_id);
+        const existing = sDb.schedule.find(s => s.teacher_id == teacher_id && s.day == day && s.hour == hour && s.school_year_id == school_year_id && (s.schedule_type || 'definitivo') === schedule_type);
         if (existing) {
-          Object.assign(existing, { class_id, slot_type, raw_value });
+          Object.assign(existing, { class_id, slot_type, raw_value, schedule_type });
         } else {
-          sDb.schedule.push({ id: Date.now() + Math.random(), teacher_id, day, hour, class_id, slot_type, raw_value, school_year_id });
+          sDb.schedule.push({ id: Date.now() + Math.random(), teacher_id, day, hour, class_id, slot_type, raw_value, school_year_id, schedule_type });
         }
         _saveSandbox(sDb);
         return;
       }
 
-      const docId = `${teacher_id}_${day}_${hour}_${school_year_id}`;
+      const docId = `${teacher_id}_${day}_${hour}_${school_year_id}_${schedule_type}`;
       await db.collection('schedule').doc(docId).set({
-        teacher_id, day, hour, class_id, slot_type, raw_value, school_year_id
+        teacher_id, day, hour, class_id, slot_type, raw_value, school_year_id, schedule_type
       });
+    },
+
+    getSchedulePeriods: async (yearId) => {
+      const yid = String(yearId);
+      if (isSandboxActive()) {
+        const sDb = _getActiveDb();
+        return sDb.schedule_periods?.[yid] || {
+          provvisorio: { start_date: '', end_date: '' },
+          definitivo: { start_date: '', end_date: '' }
+        };
+      }
+      try {
+        const snap = await db.collection('system').doc(`schedule_periods_${yid}`).get();
+        if (snap.exists) return snap.data();
+      } catch(e) {
+        console.warn('Errore lettura periodi cloud:', e);
+      }
+      const loc = localStorage.getItem(`sg_sched_periods_${yid}`);
+      if (loc) {
+        try { return JSON.parse(loc); } catch(e) {}
+      }
+      return {
+        provvisorio: { start_date: '', end_date: '' },
+        definitivo: { start_date: '', end_date: '' }
+      };
+    },
+
+    saveSchedulePeriod: async ({ school_year_id, type, start_date, end_date }) => {
+      const yid = String(school_year_id);
+      let curr = await Engine.getSchedulePeriods(yid);
+      if (!curr) curr = { provvisorio: { start_date: '', end_date: '' }, definitivo: { start_date: '', end_date: '' } };
+      curr[type] = { start_date: start_date || '', end_date: end_date || '' };
+      
+      if (isSandboxActive()) {
+        const sDb = _getActiveDb();
+        if (!sDb.schedule_periods) sDb.schedule_periods = {};
+        sDb.schedule_periods[yid] = curr;
+        _saveSandbox(sDb);
+        return curr;
+      }
+      localStorage.setItem(`sg_sched_periods_${yid}`, JSON.stringify(curr));
+      try {
+        await db.collection('system').doc(`schedule_periods_${yid}`).set(curr);
+      } catch(e) {
+        console.error('Errore salvataggio periodi cloud:', e);
+      }
+      return curr;
     },
 
     clearSchedule: async (yearId, type = 'all') => {
@@ -565,6 +613,14 @@ const Engine = (() => {
         if (!type || type === 'all') return true;
         const raw = (slot.raw_value || '').toUpperCase().trim();
         const st = slot.slot_type;
+        const schedType = slot.schedule_type || 'definitivo';
+
+        if (type === 'provvisorio') {
+          return schedType === 'provvisorio';
+        }
+        if (type === 'definitivo') {
+          return schedType === 'definitivo';
+        }
         if (type === 'ricevimento' || type === 'R') {
           return st === 'ricevimento' || raw === 'R';
         }
@@ -583,6 +639,11 @@ const Engine = (() => {
           if (Number(s.school_year_id) !== yid && String(s.school_year_id) !== String(yearId)) return true;
           return !matchesType(s);
         });
+        if (type === 'provvisorio' && sDb.schedule_periods?.[String(yearId)]) {
+          sDb.schedule_periods[String(yearId)].provvisorio = { start_date: '', end_date: '' };
+        } else if (type === 'definitivo' && sDb.schedule_periods?.[String(yearId)]) {
+          sDb.schedule_periods[String(yearId)].definitivo = { start_date: '', end_date: '' };
+        }
         _saveSandbox(sDb);
         return { ok: true };
       }
@@ -603,6 +664,10 @@ const Engine = (() => {
 
       if (count > 0) {
         await batch.commit();
+      }
+
+      if (type === 'provvisorio' || type === 'definitivo') {
+        await Engine.saveSchedulePeriod({ school_year_id: yearId, type, start_date: '', end_date: '' });
       }
 
       currentDb.schedule = currentDb.schedule.filter(s => {

@@ -127,6 +127,13 @@ const API = (() => {
       if (path.includes('/hours') && method === 'PATCH') return await Engine.adjustHours(path.split('/')[2], data.delta, data.type);
 
       // --- SCHEDULE ---
+      if (path.startsWith('/schedule/periods') && method === 'GET') {
+        const sp = new URLSearchParams(path.split('?')[1]);
+        return await Engine.getSchedulePeriods(sp.get('year_id'));
+      }
+      if (path === '/schedule/periods' && method === 'PUT') {
+        return await Engine.saveSchedulePeriod(data);
+      }
       if (path.startsWith('/schedule/clear') && method === 'DELETE') {
         const sp = new URLSearchParams(path.split('?')[1]);
         return await Engine.clearSchedule(sp.get('year_id'), sp.get('type') || 'all');
