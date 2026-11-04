@@ -10,6 +10,8 @@ var ScheduleView = (() => {
   let _filterMode = 'tutto'; // 'tutto' | 'classi' | 'dis_ecc'
   let _selDay = 'LUNEDI';
   let _schedSelectedIds = new Set();
+  let _scheduleType = 'definitivo'; // 'provvisorio' | 'definitivo'
+  let _userSwitchedType = false;
 
   async function render(container, state) {
     _yearId = state.yearId;
@@ -27,11 +29,46 @@ var ScheduleView = (() => {
         </div>`;
       return; 
     }
+
+    // Auto-selezione iniziale del tipo in base alle date di vigenza se l'utente non ha switchato manualmente
+    if (!_userSwitchedType) {
+      try {
+        const periods = await API.get(`/schedule/periods?year_id=${_yearId}`);
+        const todayStr = todayISO();
+        if (periods?.provvisorio?.start_date && periods?.provvisorio?.end_date) {
+          if (todayStr >= periods.provvisorio.start_date && todayStr <= periods.provvisorio.end_date) {
+            _scheduleType = 'provvisorio';
+          } else {
+            _scheduleType = 'definitivo';
+          }
+        }
+      } catch(e) {}
+    }
+
     container.innerHTML = `
       <div class="page-header" style="padding-bottom:12px; border-bottom:1px solid var(--border)">
         <div class="page-title">📅 Orario Scolastico</div>
       </div>
-      <div class="toolbar" style="margin-top:20px; flex-wrap:wrap; gap:8px;">
+
+      <!-- SELETTORE RAPIDO ORARIO PROVVISORIO / DEFINITIVO -->
+      <div class="sched-type-selector-card" style="margin-top:16px; padding:10px 16px; background:var(--bg-secondary); border-radius:10px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;">Tabellone Attivo:</span>
+          <div class="btn-group" style="background:var(--bg-card); padding:3px; border-radius:var(--radius); border:1px solid var(--border); display:inline-flex; gap:4px">
+            <button class="btn btn-sm ${_scheduleType==='provvisorio'?'btn-primary':'btn-ghost'}" id="sched-type-provvisorio" style="font-weight:700;">
+              ⏳ Orario Provvisorio
+            </button>
+            <button class="btn btn-sm ${_scheduleType==='definitivo'?'btn-primary':'btn-ghost'}" id="sched-type-definitivo" style="font-weight:700;">
+              📅 Orario Definitivo
+            </button>
+          </div>
+        </div>
+        <div id="sched-vigenza-info" style="font-size:12px; font-weight:600; color:var(--text-secondary);">
+          Caricamento periodo di vigenza...
+        </div>
+      </div>
+
+      <div class="toolbar" style="margin-top:16px; flex-wrap:wrap; gap:8px;">
         <div class="toolbar-left" style="flex-wrap:wrap; gap:8px;">
           <div class="search-box">
             <span class="s-icon">🔍</span>
@@ -59,6 +96,17 @@ var ScheduleView = (() => {
       </div>
       <div id="sched-mode-controls" style="margin-top:12px;"></div>
       <div id="sched-master-area"></div>`;
+
+    container.querySelector('#sched-type-provvisorio').onclick = () => {
+      _scheduleType = 'provvisorio';
+      _userSwitchedType = true;
+      render(container, state);
+    };
+    container.querySelector('#sched-type-definitivo').onclick = () => {
+      _scheduleType = 'definitivo';
+      _userSwitchedType = true;
+      render(container, state);
+    };
 
     container.querySelector('#sched-search').oninput = debounce(() => loadMasterGrid());
     container.querySelector('#sched-sort').onchange = () => loadMasterGrid();
@@ -359,7 +407,21 @@ var ScheduleView = (() => {
     area.innerHTML = '<div class="loading-overlay"><div class="spinner"></div> Caricamento orario completo...</div>';
     try {
       _teachers = await API.get(`/teachers?year_id=${_yearId}`);
-      _schedule = await API.get(`/schedule?year_id=${_yearId}`);
+      _schedule = await API.get(`/schedule?year_id=${_yearId}&schedule_type=${_scheduleType}`);
+      
+      // Aggiornamento dinamico periodo di vigenza nel badge
+      const vigenzaEl = document.getElementById('sched-vigenza-info');
+      if (vigenzaEl) {
+        try {
+          const periods = await API.get(`/schedule/periods?year_id=${_yearId}`);
+          const p = _scheduleType === 'provvisorio' ? periods?.provvisorio : periods?.definitivo;
+          if (p?.start_date && p?.end_date) {
+            vigenzaEl.innerHTML = `Vigenza ${_scheduleType === 'provvisorio' ? 'Provvisorio' : 'Definitivo'}: <strong style="color:var(--text-primary)">dal ${fmtDate(p.start_date)} al ${fmtDate(p.end_date)}</strong>`;
+          } else {
+            vigenzaEl.innerHTML = `Vigenza ${_scheduleType === 'provvisorio' ? 'Provvisorio' : 'Definitivo'}: <span style="color:var(--text-muted); font-style:italic;">Nessuna data impostata</span>`;
+          }
+        } catch(e) {}
+      }
       
       const q = (document.getElementById('sched-search')?.value||'').toLowerCase();
       const sort = document.getElementById('sched-sort')?.value;
@@ -471,7 +533,8 @@ var ScheduleView = (() => {
   function exportCurrentView() {
     let table = document.querySelector('.ov-master-table');
     if (!table) { APP.toast('Nessuna griglia da esportare. Genera prima la vista.', 'warning'); return; }
-    const VIEW_TITLE = 'Orario Scolastico';
+    const typeLabel = _scheduleType === 'provvisorio' ? 'Orario Provvisorio' : 'Orario Definitivo';
+    const VIEW_TITLE = `Orario Scolastico — ${typeLabel}`;
     const win = window.open('','_blank');
     win.document.write(`<!DOCTYPE html><html><head><title>${VIEW_TITLE}</title>
       <style>body{font-family:Arial,sans-serif;font-size:8px;padding:10px}
@@ -567,7 +630,7 @@ var ScheduleView = (() => {
     ov.querySelector('#ce-save').onclick = async () => {
       const raw = ov.querySelector('#cell-val').value.trim();
       try {
-        await API.put('/schedule/slot', { teacher_id: tid, day, hour, raw_value: raw, school_year_id: _yearId });
+        await API.put('/schedule/slot', { teacher_id: tid, day, hour, raw_value: raw, school_year_id: _yearId, schedule_type: _scheduleType });
         ov.remove(); loadMasterGrid(); APP.toast('Slot aggiornato','success');
       } catch(e) { APP.toast(e.message,'error'); }
     };

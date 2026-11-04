@@ -137,16 +137,27 @@ var DailyOverviewView = (() => {
        return;
     }
     
-    subtitle.textContent = `${getDayName(_currentDate)}, ${fmtDate(_currentDate)}`;
-
     try {
-      const [teachers, schedule, absences, trips, substitutions] = await Promise.all([
+      const [teachers, schedule, absences, trips, substitutions, periods] = await Promise.all([
         API.get(`/teachers?year_id=${state.yearId}`),
-        API.get(`/schedule?year_id=${state.yearId}`),
+        API.get(`/schedule?year_id=${state.yearId}&date=${_currentDate}`),
         API.get(`/absences?year_id=${state.yearId}&date=${_currentDate}`),
         API.get(`/trips?year_id=${state.yearId}&date=${_currentDate}`),
-        API.get(`/substitutions/history?year_id=${state.yearId}&from=${_currentDate}&to=${_currentDate}`)
+        API.get(`/substitutions/history?year_id=${state.yearId}&from=${_currentDate}&to=${_currentDate}`),
+        API.get(`/schedule/periods?year_id=${state.yearId}`)
       ]);
+
+      let isProvvisorio = false;
+      if (periods?.provvisorio?.start_date && periods?.provvisorio?.end_date) {
+        if (_currentDate >= periods.provvisorio.start_date && _currentDate <= periods.provvisorio.end_date) {
+          isProvvisorio = true;
+        }
+      }
+      const typeBadge = isProvvisorio
+        ? `<span class="badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:700; margin-left:8px; padding:2px 8px; border-radius:6px; font-size:11px;">⏳ Orario Provvisorio</span>`
+        : `<span class="badge" style="background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; font-weight:700; margin-left:8px; padding:2px 8px; border-radius:6px; font-size:11px;">📅 Orario Definitivo</span>`;
+
+      subtitle.innerHTML = `${getDayName(_currentDate)}, ${fmtDate(_currentDate)} ${typeBadge}`;
 
       const dayName = getDayName(_currentDate).toUpperCase();
       // Ore standard della scuola

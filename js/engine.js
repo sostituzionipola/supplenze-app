@@ -511,15 +511,37 @@ const Engine = (() => {
     },
 
     // ── ORARIO ──
-    getSchedule: (yearId, teacherId, day, scheduleType) => {
+    determineScheduleType: (date, yearId) => {
+      const yid = String(yearId);
+      const currentDb = _getActiveDb();
+      let periods = currentDb.schedule_periods?.[yid];
+      if (!periods) {
+        try {
+          const loc = localStorage.getItem(`sg_sched_periods_${yid}`);
+          if (loc) periods = JSON.parse(loc);
+        } catch(e) {}
+      }
+      if (periods?.provvisorio?.start_date && periods?.provvisorio?.end_date && date) {
+        if (date >= periods.provvisorio.start_date && date <= periods.provvisorio.end_date) {
+          return 'provvisorio';
+        }
+      }
+      return 'definitivo';
+    },
+
+    getSchedule: (yearId, teacherId, day, scheduleType, date) => {
       const currentDb = _getActiveDb();
       const yid = Number(yearId);
       const tid = teacherId ? Number(teacherId) : null;
+      let targetType = scheduleType;
+      if (!targetType && date) {
+        targetType = Engine.determineScheduleType(date, yearId);
+      }
       return currentDb.schedule.filter(s => 
         Number(s.school_year_id) === yid && 
         (!tid || Number(s.teacher_id) === tid) &&
         (!day || s.day === day.toUpperCase()) &&
-        (!scheduleType || s.schedule_type === scheduleType || (!s.schedule_type && scheduleType === 'definitivo'))
+        (!targetType || s.schedule_type === targetType || (!s.schedule_type && targetType === 'definitivo'))
       ).sort((a,b) => a.hour - b.hour);
     },
     updateSlot: async (slot) => {
@@ -569,13 +591,23 @@ const Engine = (() => {
       }
       try {
         const snap = await db.collection('system').doc(`schedule_periods_${yid}`).get();
-        if (snap.exists) return snap.data();
+        if (snap.exists) {
+          const data = snap.data();
+          if (!_db.schedule_periods) _db.schedule_periods = {};
+          _db.schedule_periods[yid] = data;
+          return data;
+        }
       } catch(e) {
         console.warn('Errore lettura periodi cloud:', e);
       }
       const loc = localStorage.getItem(`sg_sched_periods_${yid}`);
       if (loc) {
-        try { return JSON.parse(loc); } catch(e) {}
+        try {
+          const parsed = JSON.parse(loc);
+          if (!_db.schedule_periods) _db.schedule_periods = {};
+          _db.schedule_periods[yid] = parsed;
+          return parsed;
+        } catch(e) {}
       }
       return {
         provvisorio: { start_date: '', end_date: '' },
@@ -596,6 +628,8 @@ const Engine = (() => {
         _saveSandbox(sDb);
         return curr;
       }
+      if (!_db.schedule_periods) _db.schedule_periods = {};
+      _db.schedule_periods[yid] = curr;
       localStorage.setItem(`sg_sched_periods_${yid}`, JSON.stringify(curr));
       try {
         await db.collection('system').doc(`schedule_periods_${yid}`).set(curr);
@@ -844,13 +878,20 @@ const Engine = (() => {
 
       const currentDb = _getActiveDb();
       const hours = SCHOOL_HOURS[dayOfWeek];
-      const absToday = api.getAbsences(date, yearId).filter(a => a.status === 'approved');
+      const absToday = Engine.getAbsences(date, yearId).filter(a => a.status === 'approved');
       const allSubsRows = currentDb.substitutions.filter(s => s.date === date && s.school_year_id == yearId);
+      const activeSchedType = Engine.determineScheduleType(date, yearId);
 
       const slots = [];
       absToday.forEach(abs => {
         hours.forEach(h => {
-          const slot = currentDb.schedule.find(s => s.teacher_id == abs.teacher_id && s.day == dayOfWeek && s.hour == h && s.slot_type === 'normal');
+          const slot = currentDb.schedule.find(s => 
+            s.teacher_id == abs.teacher_id && 
+            s.day == dayOfWeek && 
+            s.hour == h && 
+            s.slot_type === 'normal' &&
+            ((s.schedule_type || 'definitivo') === activeSchedType)
+          );
           if (slot) {
             const sub = allSubsRows.find(s => s.hour == h && s.absent_teacher_id == abs.teacher_id);
             slots.push({
@@ -859,6 +900,7 @@ const Engine = (() => {
               className: currentDb.classes.find(c => c.id == slot.class_id)?.name || '?',
               absent_teacher_id: abs.teacher_id,
               absentTeacherName: abs.teacher_name,
+              schedule_type: activeSchedType,
               substitute_teacher_id: sub ? sub.substitute_teacher_id : null,
               substituteTeacherName: sub ? (currentDb.teachers.find(t=>t.id == sub.substitute_teacher_id)?.name || '?') : '',
               sub_role: sub ? sub.sub_role : ''
@@ -867,7 +909,7 @@ const Engine = (() => {
         });
       });
 
-      return { slots, absences: absToday };
+      return { slots, absences: absToday, schedule_type: activeSchedType };
     },
 
     // ── ASSEGNAZIONI LUNGO TERMINE ──

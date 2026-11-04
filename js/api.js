@@ -144,7 +144,7 @@ const API = (() => {
       }
       if (path.startsWith('/schedule') && method === 'GET') {
         const sp = new URLSearchParams(path.split('?')[1]);
-        return Engine.getSchedule(sp.get('year_id'), sp.get('teacher_id'));
+        return Engine.getSchedule(sp.get('year_id'), sp.get('teacher_id'), sp.get('day'), sp.get('schedule_type') || sp.get('type'), sp.get('date'));
       }
       if (path === '/schedule/slot' && method === 'PUT') return await Engine.updateSlot(data);
 
