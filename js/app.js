@@ -28,7 +28,9 @@ const APP = (() => {
     teacher_self_service: 'La Mia Area Docente',
     admin_notifications: 'Richieste Docenti',
     import_export: 'Importa ed Esporta Dati',
-    events: 'Eventi Scolastici'
+    events: 'Eventi Scolastici',
+    instructions_teacher: 'Istruzioni Docenti',
+    instructions_admin: 'Istruzioni Admin'
   };
   
   const navItems = [
@@ -55,7 +57,9 @@ const APP = (() => {
       admin_notifications: typeof AdminNotificationsView !== 'undefined' ? AdminNotificationsView : { render: (c) => c.innerHTML = 'Errore caricamento Notifiche' },
       import_export: typeof ImportExportView !== 'undefined' ? ImportExportView : { render: (c) => c.innerHTML = 'Errore caricamento Importa ed Esporta Dati' },
       events: typeof EventsView !== 'undefined' ? EventsView : { render: (c) => c.innerHTML = 'Errore caricamento Eventi Scolastici' },
-      organigramma: typeof OrganigrammaView !== 'undefined' ? OrganigrammaView : { render: (c, s) => OrganigrammaView.render(c, s) }
+      organigramma: typeof OrganigrammaView !== 'undefined' ? OrganigrammaView : { render: (c, s) => OrganigrammaView.render(c, s) },
+      instructions_teacher: { render: (c) => renderTeacherInstructionsPage(c) },
+      instructions_admin: { render: (c) => renderAdminInstructionsPage(c) }
     };
     return VIEWS;
   }
@@ -255,140 +259,206 @@ const APP = (() => {
     });
   }
 
-  function showTeacherManual() {
-    modal({
-      title: '📖 Istruzioni ed Area Docenti',
-      body: `
-        <div style="font-size:13px; line-height:1.7; height: 420px; overflow-y: auto; padding-right: 15px; color: var(--text-primary);">
-          <div style="padding:16px; background:var(--bg-secondary); border-radius:12px; border-left:4px solid var(--accent); margin-bottom:20px;">
-            <h3 style="margin:0 0 8px 0; color:var(--accent);">🚀 Guida Rapida Docenti</h3>
-            <p style="margin:0; font-size:12px;">Benvenuto nel portale gestionale dell'I.C. Padre A. Gemelli. Qui puoi gestire le tue assenze, consultare l'orario e accettare le sostituzioni assegnate.</p>
+  function renderTeacherInstructionsPage(container) {
+    container.innerHTML = `
+      <div class="page-header" style="margin-bottom:20px;">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+          <div>
+            <h1 class="page-title" style="font-size:22px; font-weight:800; display:flex; align-items:center; gap:10px;">
+              📖 Istruzioni ed Area Docenti
+            </h1>
+            <p class="page-subtitle" style="color:var(--text-secondary); font-size:13px; margin-top:4px;">
+              Guida operativa, gestione assenze, orari e recuperi per il personale docente
+            </p>
           </div>
-
-          <h4 style="color: var(--accent);">📝 Come Segnalare un'Assenza</h4>
-          <p>Dalla tua <strong>Area Personale</strong>, clicca sul pulsante <strong>"➕ Segnala una tua assenza"</strong>:</p>
-          <ul>
-            <li><strong>Permesso Giornaliero</strong>: Per motivi personali o familiari (max 3 giorni/anno, non richiede recupero).</li>
-            <li><strong>Concorsi ed Esami</strong>: Fino a 8 giorni per anno scolastico (non retribuiti).</li>
-            <li><strong>Formazione</strong>: Per attività di aggiornamento (max 5 giorni/anno, non richiede recupero).</li>
-            <li><strong>Ferie</strong>: Seleziona la data e il sistema <strong>mostrerà i colleghi disponibili</strong> (sia chi è a disposizione/potenziamento, sia chi è libero da lezioni).</li>
-            <li><strong>Permesso Orario</strong>: Genera un <strong>debito orario</strong> da recuperare entro 2 mesi.</li>
-            <li><strong>Ora di Ricevimento</strong>: Indica l'ora settimanale dedicata ai genitori. <strong>In quest'ora non sarai chiamato per supplenze.</strong></li>
-            <li><strong>Uscita Didattica</strong>: Indica le classi e i colleghi che ti accompagnano. Il sistema caricherà automaticamente la richiesta per tutti i membri del team.</li>
-            <li><strong>Stampa</strong>: Una volta inviata, l'admin può generare il modulo ufficiale già compilato per la tua firma.</li>
-            <li><strong>Revoca</strong>: Se hai commesso un errore, puoi annullare la tua richiesta cliccando sul tasto <strong>"Annulla"</strong> nella sezione "Le Mie Richieste" della tab Notifiche.</li>
-            <li><strong>📅 Eventi Scolastici</strong>: Nella nuova sezione puoi visualizzare e aggiungere eventi d'istituto (progetti, incontri, orari speciali) indicando classi e colleghi coinvolti.</li>
-          </ul>
-
-          <h4 style="color: var(--accent);">🗳️ Invio Disponibilità (Fase di Scelta)</h4>
-          <p>Nella scheda <strong>"Il Mio Orario"</strong> puoi indicare le ore in cui sei più disposto a recuperare: <strong>DIS</strong> (Disponibilità recupero), le ore in cui sei disposto a svolgere ore di straordinario <strong>ECC</strong> (Ore eccedenti) e le ore in cui sei disposto a ricevere i genitori <strong>R</strong> (Ricevimento):</p>
-          <ol>
-            <li>Clicca sugli slot vuoti per cambiare lo stato.</li>
-            <li>Una volta completato, clicca su <strong>"Invia alla Segreteria"</strong>.</li>
-            <li>L'azione è <strong>irreversibile</strong>: dopo l'invio solo l'amministratore potrà sbloccare il tuo profilo per nuove modifiche.</li>
-          </ol>
-
-          <h4 style="color: var(--accent);">✍️ Gestione Sostituzioni Assegnate</h4>
-          <p>Se ti viene assegnata una sostituzione, riceverai una notifica. Dovrai recarti nella tua area personale (Tab "Notifiche & Sostituzioni") e cliccare su <strong>"Firma"</strong> per confermare.</p>
-          <div class="badge badge-success" style="margin-bottom:10px">⭐ Credito Ferie</div>
-          <p>Se sostituisci un collega in <strong>Ferie</strong> o <strong>Formazione</strong>, l'ora ti verrà accreditata per scalare il tuo eventuale debito orario.</p>
-
-          <h4 style="color: var(--accent);">📊 Calcolo Debito Orario e Recuperi</h4>
-          <p>Il sistema gestisce i debiti e i recuperi orari su base continuativa annuale:</p>
-          <ul>
-            <li><strong>Debito Iniziale (Supplenze e Uscite)</strong>: Assegnato all'inizio dell'anno per cattedra o potenziamento, è valido per <strong>l'intero anno scolastico</strong>.</li>
-            <li><strong>Permessi Brevi (Art. 16 CCNL)</strong>: Fruibili fino a un massimo pari all'orario settimanale di cattedra (es. 18h). Devono essere recuperati tramite supplenze entro <strong>2 mesi</strong> dalla richiesta.</li>
-            <li><strong>Visite Mediche a Ore</strong>: Le ore di visita medica breve confluiscono nei permessi da recuperare entro 2 mesi. Per visite a giornata intera o esami specialistici continuativi, selezionare <em>Malattia</em> o <em>Permessi Giornalieri</em>.</li>
-          </ul>
-
-          <h4 style="color: var(--accent);">🤒 Segnalazione Assenza per Malattia</h4>
-          <p>La segnalazione dell'assenza per malattia sull'applicazione serve unicamente a consentire alla scuola di organizzare tempestivamente le supplenze delle classi.</p>
-          <div class="badge badge-warning" style="margin-bottom:10px">⚠️ Promemoria Amministrativo</div>
-          <p>La trasmissione del certificato medico telematico o del numero di protocollo PUC deve essere effettuata direttamente verso la Segreteria del Personale secondo le consuete modalità istituzionali.</p>
-          
-          <h4 style="color: var(--accent);">🌴 Ferie e Permessi durante l'Anno Scolastico</h4>
-          <p><strong>1. Permessi Retribuiti per Motivi Personali (3 giorni):</strong><br>
-          Spettano sia ai docenti di ruolo sia ai docenti con contratto annuale o fino al 30 giugno (a domanda con semplice autocertificazione, senza obbligo di recupero e senza dover cercare colleghi per la sostituzione: la copertura è organizzata dalla scuola).</p>
-
-          <p><strong>2. Ferie durante le Lezioni (fino a 6 giorni):</strong><br>
-          &bull; <em>Ferie Ordinarie:</em> richiedibili indicando nella domanda i colleghi disponibili a sostituire a costo zero per la scuola.<br>
-          &bull; <em>Ferie per Motivi Personali/Familiari (Art. 15 c. 2):</em> fruibili con semplice autocertificazione, senza dover cercare sostituti (copertura a cura della scuola).<br>
-          ⚠️ <em>Nota importante:</em> in entrambi i casi, i giorni fruiti durante le lezioni vengono <strong>sottratti dal conto delle ferie annuali</strong> e dovranno essere <strong>indicati come giorni già fruiti (e quindi scalati) nella richiesta di ferie estive</strong> presentata a fine anno alla Segreteria.</p>
-
-          <div class="badge badge-info" style="margin-bottom:8px">Altri Permessi Contrattuali (Ruolo e Tempo Determinato)</div>
-          <p>I congedi per <strong>Matrimonio (15 gg)</strong>, <strong>Formazione (5 gg)</strong>, <strong>Lutto (3 gg per evento)</strong> e <strong>Assemblee sindacali (10 h)</strong> spettano a tutto il personale secondo quanto previsto dal CCNL vigente. Per le supplenze brevi e saltuarie, i permessi per motivi personali sono fruibili fino a 8 giorni ad anno scolastico non retribuiti.</p>
-          
-          <h4 style="color: var(--accent);">✍️ Firma Sostituzioni Assegnate</h4>
-          <p>Tutte le sostituzioni assegnate o concordate devono essere confermate digitalmente tramite il pulsante "Firma" nella sezione "Sostituzioni Assegnate" dell'Area Docente.</p>
+          <div>
+            <button class="btn btn-secondary btn-sm" onclick="APP.navigate('teacher_self_service')">
+              👤 Vai alla Mia Area Docente
+            </button>
+          </div>
         </div>
-      `,
-      footer: '<button class="btn btn-primary" style="width:100%" onclick="this.closest(\'.modal-overlay\').remove()">Ho Capito</button>',
-      size: 'modal-md'
-    });
+      </div>
+
+      <div class="card" style="max-width:960px; margin:0 auto; padding:24px 28px; line-height:1.75; font-size:13.5px; color:var(--text-primary);">
+        <div style="padding:16px 20px; background:var(--bg-secondary); border-radius:12px; border-left:4px solid var(--accent); margin-bottom:24px;">
+          <h3 style="margin:0 0 6px 0; color:var(--accent); font-size:16px;">🚀 Guida Rapida Docenti</h3>
+          <p style="margin:0; font-size:13px; color:var(--text-secondary);">Benvenuto nel portale gestionale dell'I.C. Padre A. Gemelli. Qui puoi gestire le tue assenze, consultare l'orario scolastico e confermare le sostituzioni assegnate.</p>
+        </div>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          📝 Come Segnalare un'Assenza
+        </h3>
+        <p>Dalla tua <strong>Area Personale</strong>, clicca sul pulsante <strong>"➕ Segnala una tua assenza"</strong>:</p>
+        <ul style="padding-left:20px; margin-bottom:16px;">
+          <li style="margin-bottom:6px;"><strong>Permesso Giornaliero</strong>: Per motivi personali o familiari (max 3 giorni/anno, non richiede recupero).</li>
+          <li style="margin-bottom:6px;"><strong>Concorsi ed Esami</strong>: Fino a 8 giorni per anno scolastico (non retribuiti).</li>
+          <li style="margin-bottom:6px;"><strong>Formazione</strong>: Per attività di aggiornamento (max 5 giorni/anno, non richiede recupero).</li>
+          <li style="margin-bottom:6px;"><strong>Ferie</strong>: Seleziona la data e il sistema <strong>mostrerà i colleghi disponibili</strong> (sia chi è a disposizione/potenziamento, sia chi è libero da lezioni).</li>
+          <li style="margin-bottom:6px;"><strong>Permesso Orario</strong>: Genera un <strong>debito orario</strong> da recuperare entro 2 mesi.</li>
+          <li style="margin-bottom:6px;"><strong>Ora di Ricevimento</strong>: Indica l'ora settimanale dedicata ai genitori. <strong>In quest'ora non sarai chiamato per supplenze.</strong></li>
+          <li style="margin-bottom:6px;"><strong>Uscita Didattica</strong>: Indica le classi e i colleghi che ti accompagnano. Il sistema caricherà automaticamente la richiesta per tutti i membri del team.</li>
+          <li style="margin-bottom:6px;"><strong>Stampa</strong>: Una volta inviata, l'admin può generare il modulo ufficiale già compilato per la tua firma.</li>
+          <li style="margin-bottom:6px;"><strong>Revoca</strong>: Se hai commesso un errore, puoi annullare la tua richiesta cliccando sul tasto <strong>"Annulla"</strong> nella sezione "Le Mie Richieste" della tab Notifiche.</li>
+          <li style="margin-bottom:6px;"><strong>📅 Eventi Scolastici</strong>: Nella nuova sezione puoi visualizzare e aggiungere eventi d'istituto (progetti, incontri, orari speciali) indicando classi e colleghi coinvolti.</li>
+        </ul>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          🗳️ Invio Disponibilità (Fase di Scelta)
+        </h3>
+        <p>Nella scheda <strong>"Il Mio Orario"</strong> puoi indicare le ore in cui sei più disposto a recuperare: <strong>DIS</strong> (Disponibilità recupero), le ore in cui sei disposto a svolgere ore di straordinario <strong>ECC</strong> (Ore eccedenti) e le ore in cui sei disposto a ricevere i genitori <strong>R</strong> (Ricevimento):</p>
+        <ol style="padding-left:20px; margin-bottom:16px;">
+          <li style="margin-bottom:4px;">Clicca sugli slot vuoti per cambiare lo stato.</li>
+          <li style="margin-bottom:4px;">Una volta completato, clicca su <strong>"Invia alla Segreteria"</strong>.</li>
+          <li style="margin-bottom:4px;">L'azione è <strong>irreversibile</strong>: dopo l'invio solo l'amministratore potrà sbloccare il tuo profilo per nuove modifiche.</li>
+        </ol>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          ✍️ Gestione Sostituzioni Assegnate
+        </h3>
+        <p>Se ti viene assegnata una sostituzione, riceverai una notifica. Dovrai recarti nella tua area personale (Tab "Notifiche & Sostituzioni") e cliccare su <strong>"Firma"</strong> per confermare.</p>
+        <div class="badge badge-success" style="margin:8px 0 12px 0; display:inline-block;">⭐ Credito Ferie</div>
+        <p>Se sostituisci un collega in <strong>Ferie</strong> o <strong>Formazione</strong>, l'ora ti verrà accreditata per scalare il tuo eventuale debito orario.</p>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          📊 Calcolo Debito Orario e Recuperi
+        </h3>
+        <p>Il sistema gestisce i debiti e i recuperi orari su base continuativa annuale:</p>
+        <ul style="padding-left:20px; margin-bottom:16px;">
+          <li style="margin-bottom:6px;"><strong>Debito Iniziale (Supplenze e Uscite)</strong>: Assegnato all'inizio dell'anno per cattedra o potenziamento, è valido per <strong>l'intero anno scolastico</strong>.</li>
+          <li style="margin-bottom:6px;"><strong>Permessi Brevi (Art. 16 CCNL)</strong>: Fruibili fino a un massimo pari all'orario settimanale di cattedra (es. 18h). Devono essere recuperati tramite supplenze entro <strong>2 mesi</strong> dalla richiesta.</li>
+          <li style="margin-bottom:6px;"><strong>Visite Mediche a Ore</strong>: Le ore di visita medica breve confluiscono nei permessi da recuperare entro 2 mesi. Per visite a giornata intera o esami specialistici continuativi, selezionare <em>Malattia</em> o <em>Permessi Giornalieri</em>.</li>
+        </ul>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          🤒 Segnalazione Assenza per Malattia
+        </h3>
+        <p>La segnalazione dell'assenza per malattia sull'applicazione serve unicamente a consentire alla scuola di organizzare tempestivamente le supplenze delle classi.</p>
+        <div class="badge badge-warning" style="margin:8px 0 12px 0; display:inline-block;">⚠️ Promemoria Amministrativo</div>
+        <p>La trasmissione del certificato medico telematico o del numero di protocollo PUC deve essere effettuata direttamente verso la Segreteria del Personale secondo le consuete modalità istituzionali.</p>
+        
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          🌴 Ferie e Permessi durante l'Anno Scolastico
+        </h3>
+        <p><strong>1. Permessi Retribuiti per Motivi Personali (3 giorni):</strong><br>
+        Spettano sia ai docenti di ruolo sia ai docenti con contratto annuale o fino al 30 giugno (a domanda con semplice autocertificazione, senza obbligo di recupero e senza dover cercare colleghi per la sostituzione: la copertura è organizzata dalla scuola).</p>
+
+        <p style="margin-top:10px;"><strong>2. Ferie durante le Lezioni (fino a 6 giorni):</strong><br>
+        &bull; <em>Ferie Ordinarie:</em> richiedibili indicando nella domanda i colleghi disponibili a sostituire a costo zero per la scuola.<br>
+        &bull; <em>Ferie per Motivi Personali/Familiari (Art. 15 c. 2):</em> fruibili con semplice autocertificazione, senza dover cercare sostituti (copertura a cura della scuola).<br>
+        ⚠️ <em>Nota importante:</em> in entrambi i casi, i giorni fruiti durante le lezioni vengono <strong>sottratti dal conto delle ferie annuali</strong> e dovranno essere <strong>indicati come giorni già fruiti (e quindi scalati) nella richiesta di ferie estive</strong> presentata a fine anno alla Segreteria.</p>
+
+        <div class="badge badge-info" style="margin:12px 0 8px 0; display:inline-block;">Altri Permessi Contrattuali (Ruolo e Tempo Determinato)</div>
+        <p>I congedi per <strong>Matrimonio (15 gg)</strong>, <strong>Formazione (5 gg)</strong>, <strong>Lutto (3 gg per evento)</strong> e <strong>Assemblee sindacali (10 h)</strong> spettano a tutto il personale secondo quanto previsto dal CCNL vigente. Per le supplenze brevi e saltuarie, i permessi per motivi personali sono fruibili fino a 8 giorni ad anno scolastico non retribuiti.</p>
+        
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          ✍️ Firma Sostituzioni Assegnate
+        </h3>
+        <p>Tutte le sostituzioni assegnate o concordate devono essere confermate digitalmente tramite il pulsante "Firma" nella sezione "Sostituzioni Assegnate" dell'Area Docente.</p>
+      </div>
+    `;
+  }
+
+  function renderAdminInstructionsPage(container) {
+    container.innerHTML = `
+      <div class="page-header" style="margin-bottom:20px;">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+          <div>
+            <h1 class="page-title" style="font-size:22px; font-weight:800; display:flex; align-items:center; gap:10px;">
+              🛠️ Istruzioni Console Amministratore
+            </h1>
+            <p class="page-subtitle" style="color:var(--text-secondary); font-size:13px; margin-top:4px;">
+              Guida operativa per la gestione delle emergenze quotidiane, registro operativo e supplenze
+            </p>
+          </div>
+          <div>
+            <button class="btn btn-primary btn-sm" onclick="APP.navigate('operational_registry')">
+              📋 Vai al Registro Operativo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:960px; margin:0 auto; padding:24px 28px; line-height:1.75; font-size:13.5px; color:var(--text-primary);">
+        <div style="padding:16px 20px; background:var(--accent-light); border-radius:12px; border-left:4px solid var(--accent); margin-bottom:24px;">
+          <h3 style="margin:0 0 6px 0; color:var(--accent); font-size:16px;">🛠️ Console Amministrativa</h3>
+          <p style="margin:0; font-size:13px; color:var(--text-secondary);">Guida operativa per la gestione del registro e delle emergenze quotidiane.</p>
+        </div>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          🧩 Criteri di Assegnazione (Logica Sostituzioni)
+        </h3>
+        <p>Il sistema popola automaticamente le colonne del Registro Operativo seguendo questi criteri:</p>
+        <ol style="padding-left:20px; margin-bottom:16px;">
+          <li style="margin-bottom:4px;"><strong>In Compresenza</strong>: Docenti presenti nella stessa classe alla stessa ora.</li>
+          <li style="margin-bottom:4px;"><strong>Compresenza in altre sezioni</strong>: Docenti presenti in altre classi alla stessa ora (potenzialmente spostabili).</li>
+          <li style="margin-bottom:4px;"><strong>A Disposizione / Potenziamento / Liberi</strong>: Docenti con debito da recuperare (priorità massima) o liberi da ogni impegno nell'orario ufficiale per tale ora.</li>
+          <li style="margin-bottom:4px;"><strong>Eccedenti / Straordinario</strong>: Docenti che hanno dichiarato disponibilità per ore extra.</li>
+          <li style="margin-bottom:4px;"><strong>Oltre 5 Ore</strong>: Docenti liberi, ma che supererebbero il limite di 5 ore consecutive.</li>
+          <li style="margin-bottom:4px;"><strong>Ricevimento (R)</strong>: I docenti in ricevimento <strong>rimangono visibili</strong> tra i candidati ma sono contrassegnati da una <strong style="color:var(--danger)">R rossa</strong> per segnalare l'impegno concomitante.</li>
+          <li style="margin-bottom:4px;"><strong>Fallback</strong>: Elenco alfabetico di tutti i docenti del plesso.</li>
+        </ol>
+        
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          Gestione Amministrativa e Caricamento Dati
+        </h3>
+        <ul style="padding-left:20px; margin-bottom:16px;">
+          <li style="margin-bottom:6px;"><strong>Importa dati (Novità)</strong>: Dal menu laterale, l'amministratore può caricare massivamente l'orario, l'anagrafica e i debiti iniziali, oltre ad esportare i dati correnti.</li>
+          <li style="margin-bottom:6px;"><strong>Inserire Sostituzioni</strong>: Usa il tasto <strong>"+ Nuova Sostituzione"</strong>. È possibile selezionare **più docenti contemporaneamente** (es. assemblea sindacale).</li>
+          <li style="margin-bottom:6px;"><strong>Registro Operativo</strong>: Le colonne mostrano ora distintamente i docenti in compresenza nella classe e quelli in **compresenza in altre sezioni**.</li>
+          <li style="margin-bottom:6px;"><strong>Gestione Supplenti (A tempo det.)</strong>: Se un docente è assente per lungo periodo, usa lo strumento integrato nel modale <strong>"Aggiungi/Modifica Docente"</strong> (scheda "Gestione Supplenti") nell'Anagrafica. Qui puoi nominare un supplente che erederà l'orario del titolare, riceverà notifiche e avrà un suo saldo ore personale.</li>
+          <li style="margin-bottom:6px;"><strong>Eventi Scolastici (Novità)</strong>: Dal menu laterale è possibile accedere alla bacheca degli eventi. Qui si possono coordinare progetti, uscite e incontri, specificando classi e docenti coinvolti per una migliore pianificazione scolastica.</li>
+        </ul>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          ❌ Correzione ed Eliminazione
+        </h3>
+        <p>Se commetti un errore:</p>
+        <ul style="padding-left:20px; margin-bottom:16px;">
+          <li style="margin-bottom:4px;"><strong>Singola Ora</strong>: Clicca sulla <strong>"✕"</strong> rossa accanto al nome del docente nel registro operativo.</li>
+          <li style="margin-bottom:4px;"><strong>Intera Assenza</strong>: Nel menu "⋮" (Tre puntini), seleziona <strong>"Elimina Assenza..."</strong>.</li>
+        </ul>
+
+        <div class="dropdown-divider" style="margin:20px 0"></div>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          1. Gestione Permessi Brevi
+        </h3>
+        <p>Le ore di permesso orario richieste dai docenti vengono caricate automaticamente come <strong>debito orario</strong>. Il sistema monitora la scadenza dei due mesi per il recupero.</p>
+        
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          2. Approvazione Ferie
+        </h3>
+        <p>Quando un docente richiede ferie indicando i sostituti, l'amministratore vedrà i nomi dei colleghi nella scheda della richiesta. All'approvazione, il sistema notificherà automaticamente i sostituti indicati.</p>
+        
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          3. Inserimento da Registro
+        </h3>
+        <p>L'amministratore può inserire assenze per ferie, formazione o permessi direttamente dal Registro Operativo o da Richieste Docenti. Nel modulo di inserimento, la <strong>motivazione è facoltativa</strong>.</p>
+        
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          4. Uscite di Team
+        </h3>
+        <p>Registrando un'uscita (dal registro o approvando quella di un docente), puoi indicare più accompagnatori. Il sistema sincronizzerà i record di assenza per tutto il gruppo.</p>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          5. Stampa Moduli
+        </h3>
+        <p>Usa l'icona 🖨️ (presente in Registro Operativo e Gestione Assenze) per generare istantaneamente il modulo di assenza istituzionale con l'intestazione dell'Istituto, pronto per la firma.</p>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          6. Traccia Log
+        </h3>
+        <p>Ogni operazione di modifica (assegnazione, eliminazione, approvazione) viene registrata nel log di sistema con data, ora e utente che ha effettuato l'azione.</p>
+      </div>
+    `;
+  }
+
+  function showTeacherManual() {
+    navigate('instructions_teacher');
   }
 
   function showAdminManual() {
-    modal({
-      title: '🛠️ Istruzioni Area Amministratore',
-      body: `
-        <div style="font-size:13px; line-height:1.7; height: 420px; overflow-y: auto; padding-right: 15px; color: var(--text-primary);">
-          <div style="padding:16px; background:var(--accent-light); border-radius:12px; border-left:4px solid var(--accent); margin-bottom:20px;">
-            <h3 style="margin:0 0 8px 0; color:var(--accent);">🛠️ Console Amministrativa</h3>
-            <p style="margin:0; font-size:12px;">Guida operativa per la gestione del registro e delle emergenze quotidiane.</p>
-          </div>
-
-          <h4 style="color: var(--accent);">🧩 Criteri di Assegnazione (Logica Sostituzioni)</h4>
-          <p>Il sistema popola automaticamente le colonne del Registro Operativo seguendo questi criteri:</p>
-          <ol>
-              <li><strong>In Compresenza</strong>: Docenti presenti nella stessa classe alla stessa ora.</li>
-              <li><strong>Compresenza in altre sezioni</strong>: Docenti presenti in altre classi alla stessa ora (potenzialmente spostabili).</li>
-              <li><strong>A Disposizione / Potenziamento / Liberi</strong>: Docenti con debito da recuperare (priorità massima) o liberi da ogni impegno nell'orario ufficiale per tale ora.</li>
-              <li><strong>Eccedenti / Straordinario</strong>: Docenti che hanno dichiarato disponibilità per ore extra.</li>
-              <li><strong>Oltre 5 Ore</strong>: Docenti liberi, ma che supererebbero il limite di 5 ore consecutive.</li>
-              <li><strong>Ricevimento (R)</strong>: I docenti in ricevimento <strong>rimangono visibili</strong> tra i candidati ma sono contrassegnati da una <strong style="color:var(--danger)">R rossa</strong> per segnalare l'impegno concomitante.</li>
-              <li><strong>Fallback</strong>: Elenco alfabetico di tutti i docenti del plesso.</li>
-          </ol>
-          
-          <h4 style="color: var(--accent);">Gestione Amministrativa e Caricamento Dati</h4>
-          <ul>
-            <li><strong>Importa dati (Novità)</strong>: Dal menu laterale, l'amministratore può caricare massivamente l'orario, l'anagrafica e i debiti iniziali, oltre ad esportare i dati correnti.</li>
-            <li><strong>Inserire Sostituzioni</strong>: Usa il tasto <strong>"+ Nuova Sostituzione"</strong>. È possibile selezionare **più docenti contemporaneamente** (es. assemblea sindacale).</li>
-            <li><strong>Registro Operativo</strong>: Le colonne mostrano ora distintamente i docenti in compresenza nella classe e quelli in **compresenza in altre sezioni**.</li>
-            <li><strong>Gestione Supplenti (A tempo det.)</strong>: Se un docente è assente per lungo periodo, usa lo strumento integrato nel modale <strong>"Aggiungi/Modifica Docente"</strong> (scheda "Gestione Supplenti") nell'Anagrafica. Qui puoi nominare un supplente che erederà l'orario del titolare, riceverà notifiche e avrà un suo saldo ore personale.</li>
-            <li><strong>Eventi Scolastici (Novità)</strong>: Dal menu laterale è possibile accedere alla bacheca degli eventi. Qui si possono coordinare progetti, uscite e incontri, specificando classi e docenti coinvolti per una migliore pianificazione scolastica.</li>
-          </ul>
-
-          <h4 style="color: var(--accent);">❌ Correzione ed Eliminazione</h4>
-          <p>Se commetti un errore:</p>
-          <ul>
-            <li><strong>Singola Ora</strong>: Clicca sulla <strong>"✕"</strong> rossa accanto al nome del docente nel registro operativo.</li>
-            <li><strong>Intera Assenza</strong>: Nel menu "⋮" (Tre puntini), seleziona <strong>"Elimina Assenza..."</strong>.</li>
-          </ul>
-
-          <div class="dropdown-divider" style="margin:20px 0"></div>
-
-          <h4 style="margin-top:0; color: var(--accent);">1. Gestione Permessi Brevi</h4>
-          <p>Le ore di permesso orario richieste dai docenti vengono caricate automaticamente come <strong>debito orario</strong>. Il sistema monitora la scadenza dei due mesi per il recupero.</p>
-          
-          <h4 style="color: var(--accent);">2. Approvazione Ferie</h4>
-          <p>Quando un docente richiede ferie indicando i sostituti, l'amministratore vedrà i nomi dei colleghi nella scheda della richiesta. All'approvazione, il sistema notificherà automaticamente i sostituti indicati.</p>
-          
-          <h4 style="color: var(--accent);">3. Inserimento da Registro</h4>
-          <p>L'amministratore può inserire assenze per ferie, formazione o permessi direttamente dal Registro Operativo o da Richieste Docenti. Nel modulo di inserimento, la <strong>motivazione è facoltativa</strong>.</p>
-          
-          <h4 style="color: var(--accent);">4. Uscite di Team</h4>
-          <p>Registrando un'uscita (dal registro o approvando quella di un docente), puoi indicare più accompagnatori. Il sistema sincronizzerà i record di assenza per tutto il gruppo.</p>
-
-          <h4 style="color: var(--accent);">5. Stampa Moduli</h4>
-          <p>Usa l'icona 🖨️ (presente in Registro Operativo e Gestione Assenze) per generare istantaneamente il modulo di assenza istituzionale con l'intestazione dell'Istituto, pronto per la firma.</p>
-
-          <h4 style="color: var(--accent);">6. Traccia Log</h4>
-          <p>Ogni operazione di modifica (assegnazione, eliminazione, approvazione) viene registrata nel log di sistema con data, ora e utente che ha effettuato l'azione.</p>
-        </div>
-      `,
-      footer: '<button class="btn btn-primary" style="width:100%" onclick="this.closest(\'.modal-overlay\').remove()">Chiudi</button>',
-      size: 'modal-md'
-    });
+    navigate('instructions_admin');
   }
 
   const getHash = () => window.location.hash.slice(1).replace(/^\//, '');
@@ -399,7 +469,7 @@ const APP = (() => {
     if (!currentViews[v]) return;
     
     if (v === 'settings' && !isAdminMaster()) { toast('Accesso riservato ad Admin Master.', 'warning'); return; }
-    if (['teachers', 'import_export', 'admin_notifications'].includes(v) && !isAdmin()) {
+    if (['teachers', 'import_export', 'admin_notifications', 'instructions_admin'].includes(v) && !isAdmin()) {
       toast('Permessi insufficienti.', 'warning'); return;
     }
 
@@ -875,12 +945,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.innerWidth <= 1024) closeMobileSidebar();
   });
   document.getElementById('nav-instr-teacher')?.addEventListener('click', () => {
-    APP.showTeacherManual();
+    APP.navigate('instructions_teacher');
     if (window.innerWidth <= 1024) closeMobileSidebar();
   });
   document.getElementById('nav-instr-admin')?.addEventListener('click', () => {
-    APP.showAdminManual();
-    if (window.innerWidth <= 1024) sidebar?.classList.remove('open');
+    APP.navigate('instructions_admin');
+    if (window.innerWidth <= 1024) closeMobileSidebar();
   });
 
   // Gestore cambio anno
