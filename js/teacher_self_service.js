@@ -36,11 +36,11 @@ var TeacherSelfServiceView = (() => {
 
       <div id="ts-stats-bar" style="margin-top:12px; display:flex; gap:16px; flex-wrap:wrap;"></div>
 
-      <div class="mt-20 mb-24" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-        <div class="btn-group" style="background:var(--bg-card); padding:4px; border-radius:var(--radius); border:1px solid var(--border); display:inline-flex; gap:4px;">
+      <div class="mt-20 mb-24" style="display:flex; flex-direction:column; gap:10px;">
+        <div class="ts-nav-tabs">
           <button class="btn btn-sm ${_tab==='notifiche'?'btn-primary':'btn-ghost'}" id="ts-tab-notifiche">🔔 Notifiche</button>
-          <button class="btn btn-sm ${_tab==='orario'?'btn-primary':'btn-ghost'}" id="ts-tab-orario">📅 Il Mio Orario</button>
-          <button class="btn btn-sm ${_tab==='ore'?'btn-primary':'btn-ghost'}" id="ts-tab-ore">📊 Le Mie Ore</button>
+          <button class="btn btn-sm ${_tab==='orario'?'btn-primary':'btn-ghost'}" id="ts-tab-orario">📅 Orario</button>
+          <button class="btn btn-sm ${_tab==='ore'?'btn-primary':'btn-ghost'}" id="ts-tab-ore">📊 Ore</button>
           <button class="btn btn-sm ${_tab==='esporta'?'btn-primary':'btn-ghost'}" id="ts-tab-esporta">📄 Esporta</button>
         </div>
         <button class="btn btn-sm ${_tab==='segnala'?'btn-primary':'btn-ghost'}" id="ts-tab-segnala" style="border:1px solid var(--accent); font-weight:700;">➕ Segnala Assenza</button>
@@ -591,30 +591,89 @@ var TeacherSelfServiceView = (() => {
       const history = await API.get(`/substitutions/history?year_id=${_yearId}&teacher_id=${_teacherId}`);
       const mySubs = history.filter(s => s.substitute_teacher_id == _teacherId);
       if (!mySubs.length) { list.innerHTML = '<div class="empty-state" style="padding:16px;">Nessuna sostituzione assegnata.</div>'; return; }
-      list.innerHTML = `<table class="table"><thead><tr><th>Data</th><th>Ora</th><th>Classe</th><th>Tipo</th><th>Firma / Risposta</th></tr></thead><tbody>
-        ${mySubs.map(s => {
-          let statusHtml = '';
-          if (s.status === 'rejected') {
-            statusHtml = `<span style="color:#ef4444; font-weight:bold; font-size:12px;">❌ Rifiutata</span>`;
-          } else if (s.accepted) {
-            statusHtml = `<span style="color:#16a34a; font-weight:bold;">✅ Firmata</span>`;
-          } else {
-            statusHtml = `
-              <div style="display:flex; gap:6px; align-items:center;">
-                <button class="btn btn-primary btn-sm" onclick="TeacherSelfServiceView.acceptAssignment(event,${s.id})">✍️ Firma</button>
-                <button class="btn btn-ghost btn-sm text-danger" style="font-size:12px;" onclick="TeacherSelfServiceView.rejectAssignment(event,${s.id})">❌ Rifiuta</button>
+
+      // ── DESKTOP VIEW (Tabella classica compatta) ──
+      const desktopTableHtml = `
+        <div class="table-wrapper hide-mobile">
+          <table class="table">
+            <thead>
+              <tr><th>Data</th><th>Ora</th><th>Classe</th><th>Tipo</th><th>Firma / Risposta</th></tr>
+            </thead>
+            <tbody>
+              ${mySubs.map(s => {
+                let statusHtml = '';
+                if (s.status === 'rejected') {
+                  statusHtml = `<span style="color:#ef4444; font-weight:bold; font-size:12px;">❌ Rifiutata</span>`;
+                } else if (s.accepted) {
+                  statusHtml = `<span style="color:#16a34a; font-weight:bold;">✅ Firmata</span>`;
+                } else {
+                  statusHtml = `
+                    <div style="display:flex; gap:6px; align-items:center;">
+                      <button class="btn btn-primary btn-sm" onclick="TeacherSelfServiceView.acceptAssignment(event,${s.id})">✍️ Firma</button>
+                      <button class="btn btn-ghost btn-sm text-danger" style="font-size:12px;" onclick="TeacherSelfServiceView.rejectAssignment(event,${s.id})">❌ Rifiuta</button>
+                    </div>
+                  `;
+                }
+                return `<tr>
+                  <td><strong>${fmtDate(s.date)}</strong></td>
+                  <td>${s.hour}ª</td>
+                  <td>${escHtml(s.class_name||'—')}</td>
+                  <td><span class="badge ${s.hours_counted?'badge-info':'badge-warning'}">${s.hours_counted?'Recupero':'Eccedente'}</span></td>
+                  <td>${statusHtml}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      // ── MOBILE VIEW (Schede verticali touch-friendly da 44px) ──
+      const mobileCardsHtml = `
+        <div class="show-mobile ts-sub-cards-container" style="display:flex; flex-direction:column; gap:12px;">
+          ${mySubs.map(s => {
+            let statusMobileHtml = '';
+            if (s.status === 'rejected') {
+              statusMobileHtml = `
+                <div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); color:#ef4444; border-radius:8px; padding:10px; text-align:center; font-weight:700; font-size:13px;">
+                  ❌ Sostituzione Rifiutata
+                </div>`;
+            } else if (s.accepted) {
+              statusMobileHtml = `
+                <div style="background:rgba(22,163,74,0.08); border:1px solid rgba(22,163,74,0.25); color:#16a34a; border-radius:8px; padding:10px; text-align:center; font-weight:700; font-size:13px;">
+                  ✅ Sostituzione Firmata
+                </div>`;
+            } else {
+              statusMobileHtml = `
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px;">
+                  <button class="btn btn-primary" style="min-height:44px; height:44px; justify-content:center; font-size:14px; font-weight:700; border-radius:10px; box-shadow:0 2px 6px rgba(99,102,241,0.25);" onclick="TeacherSelfServiceView.acceptAssignment(event,${s.id})">
+                    ✍️ Firma
+                  </button>
+                  <button class="btn btn-secondary text-danger" style="min-height:44px; height:44px; justify-content:center; font-size:14px; font-weight:600; border-radius:10px; border-color:var(--danger);" onclick="TeacherSelfServiceView.rejectAssignment(event,${s.id})">
+                    ❌ Rifiuta
+                  </button>
+                </div>`;
+            }
+
+            return `
+              <div class="card" style="padding:14px 16px; border:1px solid var(--border); border-radius:12px; background:var(--bg-card);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-weight:700; font-size:15px; color:var(--text-primary);">📅 ${fmtDate(s.date)}</span>
+                    <span style="background:var(--bg-hover); border:1px solid var(--border); border-radius:6px; padding:2px 8px; font-size:12px; font-weight:700;">${s.hour}ª Ora</span>
+                  </div>
+                  <span class="badge ${s.hours_counted?'badge-info':'badge-warning'}">${s.hours_counted?'Recupero':'Eccedente'}</span>
+                </div>
+                <div style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">
+                  Classe: <strong style="color:var(--text-primary); font-size:14px;">${escHtml(s.class_name||'—')}</strong>
+                </div>
+                ${statusMobileHtml}
               </div>
             `;
-          }
-          return `<tr>
-            <td><strong>${fmtDate(s.date)}</strong></td>
-            <td>${s.hour}ª</td>
-            <td>${escHtml(s.class_name||'—')}</td>
-            <td><span class="badge ${s.hours_counted?'badge-info':'badge-warning'}">${s.hours_counted?'Recupero':'Eccedente'}</span></td>
-            <td>${statusHtml}</td>
-          </tr>`;
-        }).join('')}
-      </tbody></table>`;
+          }).join('')}
+        </div>
+      `;
+
+      list.innerHTML = desktopTableHtml + mobileCardsHtml;
     } catch(e) { list.innerHTML = '<div class="empty-state">Errore caricamento sostituzioni.</div>'; }
   }
 
@@ -1008,34 +1067,36 @@ async function renderOre(container, state) {
           <span>📋 Registro Ore e Scadenze Recupero</span>
           <span style="font-weight:400; font-size:11px; color:var(--text-secondary);">Recupero permessi brevi entro 2 mesi (Art. 16 CCNL)</span>
         </div>
-        <table style="width:100%; border-collapse:collapse; font-size:12px;">
-          <thead>
-            <tr style="background:var(--bg-secondary); font-size:10px; text-transform:uppercase; letter-spacing:0.5px">
-              <th style="padding:10px 15px; text-align:left; border-bottom:2px solid var(--border)">Data</th>
-              <th style="text-align:left; border-bottom:2px solid var(--border)">Causale</th>
-              <th style="text-align:center; border-bottom:2px solid var(--border)">Ore</th>
-              <th style="text-align:left; border-bottom:2px solid var(--border)">Termine Recupero</th>
-              <th style="text-align:center; border-bottom:2px solid var(--border)">Stato</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${registryItems.length ? registryItems.map(item => `
-              <tr style="border-bottom:1px solid var(--border);">
-                <td style="padding:8px 15px; font-weight:600;">${item.date}</td>
-                <td>${item.title}</td>
-                <td style="text-align:center; font-weight:700;">${item.hours} h</td>
-                <td style="${item.isExpired ? 'color:var(--danger-text); font-weight:bold;' : ''}">${item.deadline}</td>
-                <td style="text-align:center;">
-                  ${item.isExempt 
-                    ? '<span class="badge badge-success">✓ Esente</span>' 
-                    : (item.isExpired 
-                        ? '<span class="badge badge-danger">⚠️ Scaduto >60gg</span>' 
-                        : '<span class="badge badge-info">In corso</span>')}
-                </td>
+        <div class="table-wrapper" style="border:none; margin:0; border-radius:0;">
+          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <thead>
+              <tr style="background:var(--bg-secondary); font-size:10px; text-transform:uppercase; letter-spacing:0.5px">
+                <th style="padding:10px 15px; text-align:left; border-bottom:2px solid var(--border)">Data</th>
+                <th style="text-align:left; border-bottom:2px solid var(--border)">Causale</th>
+                <th style="text-align:center; border-bottom:2px solid var(--border)">Ore</th>
+                <th style="text-align:left; border-bottom:2px solid var(--border)">Termine Recupero</th>
+                <th style="text-align:center; border-bottom:2px solid var(--border)">Stato</th>
               </tr>
-            `).join('') : '<tr><td colspan="5" style="padding:16px; text-align:center; color:var(--text-muted);">Nessun debito o permesso registrato.</td></tr>'}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${registryItems.length ? registryItems.map(item => `
+                <tr style="border-bottom:1px solid var(--border);">
+                  <td style="padding:8px 15px; font-weight:600;">${item.date}</td>
+                  <td>${item.title}</td>
+                  <td style="text-align:center; font-weight:700;">${item.hours} h</td>
+                  <td style="${item.isExpired ? 'color:var(--danger-text); font-weight:bold;' : ''}">${item.deadline}</td>
+                  <td style="text-align:center;">
+                    ${item.isExempt 
+                      ? '<span class="badge badge-success">✓ Esente</span>' 
+                      : (item.isExpired 
+                          ? '<span class="badge badge-danger">⚠️ Scaduto >60gg</span>' 
+                          : '<span class="badge badge-info">In corso</span>')}
+                  </td>
+                </tr>
+              `).join('') : '<tr><td colspan="5" style="padding:16px; text-align:center; color:var(--text-muted);">Nessun debito o permesso registrato.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Storico Sostituzioni Svolte -->
@@ -1044,12 +1105,12 @@ async function renderOre(container, state) {
           <span>✍️ Storico Sostituzioni e Supplenze Effettuate</span>
           <span style="font-size:12px; color:var(--text-secondary)">Totale: ${mySubs.length} (Recuperi: ${subsDone+tripsDone}, Eccedenti: ${eccedenti})</span>
         </div>
-        ${mySubs.length ? `<table style="width:100%; border-collapse:collapse; font-size:13px;">
+        ${mySubs.length ? `<div class="table-wrapper" style="border:none; margin:0; border-radius:0;"><table style="width:100%; border-collapse:collapse; font-size:13px;">
           <thead><tr style="background:var(--bg-secondary);">
             <th style="padding:7px 12px;">Giorno</th><th>Ora</th><th>Tipo</th><th>Classe</th><th>Firma</th>
           </tr></thead>
           <tbody>${rowsHtml}</tbody>
-        </table>` : '<div class="empty-state" style="padding:24px;">Nessuna sostituzione o recupero effettuato.</div>'}
+        </table></div>` : '<div class="empty-state" style="padding:24px;">Nessuna sostituzione o recupero effettuato.</div>'}
       </div>
     `;
   } catch(e) {
@@ -1258,7 +1319,7 @@ async function generateDocument(container) {
       const myAbsences = absences.filter(a => a.teacher_id == _teacherId);
       if (!myAbsences.length) { list.innerHTML = '<div class="empty-state" style="padding:16px;">Nessuna richiesta inviata.</div>'; return; }
       
-      list.innerHTML = `<table class="table" style="font-size:13px;">
+      list.innerHTML = `<div class="table-wrapper" style="border:none; margin:0; border-radius:0;"><table class="table" style="font-size:13px;">
         <thead><tr><th>Data</th><th>Tipo</th><th>Stato</th><th>Azione</th></tr></thead>
         <tbody>
           ${myAbsences.map(a => {
@@ -1282,7 +1343,7 @@ async function generateDocument(container) {
           `;
           }).join('')}
         </tbody>
-      </table>`;
+      </table></div>`;
     } catch(e) { list.innerHTML = '<div class="empty-state">Errore caricamento richieste.</div>'; }
   }
 

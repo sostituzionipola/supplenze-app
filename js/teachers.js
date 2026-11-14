@@ -3,7 +3,7 @@
 // ══════════════════════════════════
 var TeachersView = (() => {
   let _teachers = [], _filtered = [], _yearId = null, _currentTab = 'anagrafica';
-  let _periodFrom = '', _periodTo = '', _state = null;
+  let _periodFrom = '', _periodTo = '', _state = null, _lastLoadedYearId = null;
   let _selectedIds = new Set();
 
   async function render(container, state) {
@@ -23,14 +23,29 @@ var TeachersView = (() => {
         </div>`; 
       return; 
     }
+
+    // Preimpostazione automatica delle date del periodo (inizio -> fine anno scolastico)
+    if (_lastLoadedYearId !== _yearId || (!_periodFrom && !_periodTo)) {
+      _lastLoadedYearId = _yearId;
+      const activeYear = (state?.years || []).find(y => String(y.id) === String(_yearId)) 
+                      || (state?.years || []).find(y => y.is_active) 
+                      || state?.years?.[0];
+      if (activeYear?.start_date && activeYear?.end_date) {
+        _periodFrom = activeYear.start_date;
+        _periodTo = activeYear.end_date;
+      } else {
+        _periodFrom = '2026-09-01';
+        _periodTo = '2027-06-30';
+      }
+    }
     
     container.innerHTML = `
       <div class="page-header" style="padding-bottom:12px; border-bottom:1px solid var(--border)">
         <div class="page-title">👨‍🏫 Gestione Docenti</div>
       </div>
 
-      <div class="toolbar" style="margin-top:20px; flex-wrap:wrap; gap:8px;">
-        <div class="toolbar-left" style="flex-wrap:wrap; gap:8px;">
+      <div class="toolbar teachers-toolbar" style="margin-top:20px; flex-wrap:wrap; gap:8px;">
+        <div class="toolbar-left teachers-toolbar-left" style="flex-wrap:wrap; gap:8px;">
           <div class="search-box">
             <span class="s-icon">🔍</span>
             <input type="text" id="teacher-search" placeholder="Cerca per Nome, Materia o Classe…"/>
@@ -41,21 +56,23 @@ var TeachersView = (() => {
             <option value="subject">Materia</option>
             <option value="debt">Ore da Recuperare (↓)</option>
           </select>
-          <div style="display:flex; align-items:center; gap:6px; font-size:13px;">
-            <label style="color:var(--text-secondary); white-space:nowrap;">Periodo:</label>
-            <input type="date" id="period-from" class="form-control" value="${_periodFrom}" style="padding:5px 8px; width:140px;" placeholder="Dal">
-            <span style="color:var(--text-muted)">→</span>
-            <input type="date" id="period-to" class="form-control" value="${_periodTo}" style="padding:5px 8px; width:140px;" placeholder="Al">
-            <button class="btn btn-ghost btn-sm" id="period-clear-btn" title="Azzera periodo">✕</button>
+          <div class="teachers-period-row">
+            <span class="teachers-period-label">Periodo:</span>
+            <div class="teachers-period-inputs">
+              <input type="date" id="period-from" class="form-control" value="${_periodFrom}" placeholder="Dal">
+              <span class="period-arrow">→</span>
+              <input type="date" id="period-to" class="form-control" value="${_periodTo}" placeholder="Al">
+              <button class="btn btn-ghost btn-sm" id="period-clear-btn" title="Azzera periodo">✕</button>
+            </div>
           </div>
         </div>
-        <div class="toolbar-right" style="flex-wrap:wrap; gap:8px;">
+        <div class="toolbar-right teachers-toolbar-right" style="flex-wrap:wrap; gap:8px;">
           <button class="btn btn-ghost" id="export-all-btn" title="Stampa/esporta storico completo di tutti i docenti">🖨️ Stampa / Esporta Tutto</button>
           <button class="btn btn-primary" id="add-teacher-btn">👤 + Aggiungi Docente</button>
         </div>
       </div>
 
-      <div class="btn-group mb-24" style="background:var(--bg-card); padding:4px; border-radius:var(--radius); border:1px solid var(--border); display:flex; flex-wrap:wrap; gap:4px">
+      <div class="btn-group mb-24 teachers-tab-strip" style="background:var(--bg-card); padding:4px; border-radius:var(--radius); border:1px solid var(--border); display:flex; gap:4px; overflow-x:auto; -webkit-overflow-scrolling:touch; max-width:100%;">
         <button class="btn btn-sm ${_currentTab === 'anagrafica' ? 'btn-primary' : 'btn-ghost'}" id="tab-anagrafica">Anagrafica Docenti</button>
         <button class="btn btn-sm ${_currentTab === 'rec_subs' ? 'btn-primary' : 'btn-ghost'}" id="tab-rec-subs">Recupero Ore Supplenze</button>
         <button class="btn btn-sm ${_currentTab === 'rec_trips' ? 'btn-primary' : 'btn-ghost'}" id="tab-rec-trips">Recupero Uscite/Soggiorni</button>
@@ -108,7 +125,7 @@ var TeachersView = (() => {
 
   async function renderAnagrafica(container, state) {
     container.innerHTML = `
-      <div class="table-wrapper">
+      <div class="table-wrapper teachers-table-wrapper">
         <table id="teachers-table">
           <thead><tr>
             <th style="width:36px; text-align:center">
@@ -571,7 +588,7 @@ var TeachersView = (() => {
               <button class="btn btn-ghost btn-sm" onclick="TeachersView.exportSection('rec-supplenze', 'Recupero_Supplenze', 'excel')">📥 Excel</button>
             </div>
           </div>
-          <div class="table-wrapper">
+          <div class="table-wrapper teachers-table-wrapper">
             <table style="width:100%; border-collapse: collapse; font-size:12px">
               <thead>
                 <tr style="background:var(--bg-secondary)">
@@ -624,7 +641,7 @@ var TeachersView = (() => {
               <button class="btn btn-ghost btn-sm" onclick="TeachersView.exportSection('rec-uscite', 'Recupero_Uscite', 'excel')">📥 Excel</button>
             </div>
           </div>
-          <div class="table-wrapper">
+          <div class="table-wrapper teachers-table-wrapper">
             <table style="width:100%; border-collapse: collapse; font-size:12px">
               <thead>
                 <tr style="background:var(--bg-secondary)">

@@ -169,7 +169,7 @@ var OperationalRegistryView = (() => {
       if (statsBar) {
         const stats = await API.get(`/teachers/suggestions/stats?teacher_id=${allTeachers[0]?.id}&year_id=${state.yearId}`);
         statsBar.innerHTML = `
-          <div class="stats-grid" style="grid-template-columns:repeat(4,1fr); margin:0 0 4px 0;">
+          <div class="stats-grid reg-stats-grid" style="margin:0 0 4px 0;">
             <div class="stat-card accent"><div class="stat-value">${presentCount}</div><div class="stat-label">Docenti Presenti</div></div>
             <div class="stat-card warning"><div class="stat-value">${absentCount}</div><div class="stat-label">Docenti Assenti</div></div>
             <div class="stat-card danger"><div class="stat-value">${uncovered}</div><div class="stat-label">Slot da Coprire</div></div>
@@ -192,8 +192,8 @@ var OperationalRegistryView = (() => {
              <strong style="font-size:20px;">Registro Operativo Sostituzioni</strong><br/>
              Data: <strong>${fmtDate(_currentDate)}</strong>
           </div>
-          <div style="max-height: calc(100vh - 270px); overflow-y: auto; overflow-x: auto;">
-          <table class="reg-columnar-table" style="width:100%; border-collapse: separate; border-spacing: 0; min-width: 1100px;">
+          <div class="reg-table-scroll-wrapper" style="max-height: calc(100vh - 270px); overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+          <table class="reg-columnar-table" style="width:100%; border-collapse: separate; border-spacing: 0;">
             <thead style="position: sticky; top: 0; z-index: 90;">
               <tr>
                 <th class="reg-sticky-hour" style="width:5%; background: var(--bg-card); border-bottom: 2px solid var(--border-thick); border-right: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Ora</th>
@@ -254,7 +254,7 @@ var OperationalRegistryView = (() => {
                   <td style="border-right: 2px solid var(--border-thick); border-bottom: 2px solid var(--border-thick);">${renderSubCell(slot, existing, 'oltre5ore', isReadOnly, daily.absences, activeLT)}</td>
                   <td style="border-bottom: 2px solid var(--border-thick); text-align:center;">${renderAccepted(existing)}</td>
                 ` : `
-                  <td style="border-right: 2px solid var(--border-thick); border-bottom: 2px solid var(--border-thick);"></td>
+                <td style="border-right: 2px solid var(--border-thick); border-bottom: 2px solid var(--border-thick);"></td>
                   <td style="border-right: 2px solid var(--border-thick); border-bottom: 2px solid var(--border-thick);"></td>
                   <td style="border-right: 2px solid var(--border-thick); border-bottom: 2px solid var(--border-thick);"></td>
                   <td style="border-right: 2px solid var(--border-thick); border-bottom: 2px solid var(--border-thick);"></td>

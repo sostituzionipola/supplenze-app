@@ -3,7 +3,9 @@
   "short_name": "Sostituzioni",
   "description": "Sistema gestione supplenze scolastiche I.C. Padre A. Gemelli",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#0a1128",
   "theme_color": "#0a1128",
   "icons": [

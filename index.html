@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"/>
   <title>Gestionale Sostituzioni</title>
   <meta name="theme-color" content="#0a1128">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="favicon.png?v=10">
   <link rel="icon" type="image/png" sizes="512x512" href="favicon.png?v=10">
   <link rel="manifest" href="manifest.json?v=10">
-  <link rel="stylesheet" href="css/style.css?v=1.6">
+  <link rel="stylesheet" href="css/style.css?v=3.5">
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
@@ -198,10 +198,6 @@
       <div class="nav-item" data-view="settings" id="nav-settings">
         <span class="nav-icon">⚙️</span> Impostazioni
       </div>
-      <!-- Login Preview — admin_master only -->
-      <div class="nav-item" data-view="login_preview" id="nav-login-preview" style="display:none">
-        <span class="nav-icon">🔑</span> Login <span style="font-size:10px; color:var(--text-muted); margin-left:4px;">(sola visualizzazione)</span>
-      </div>
     </nav>
 
     <div class="sidebar-footer">
@@ -235,6 +231,9 @@
     <header class="top-bar">
       <button class="mobile-toggle" id="mobile-toggle-btn">☰</button>
       <div class="topbar-date" id="topbar-date"></div>
+      <div class="topbar-center-logo">
+        <img src="assets/logo-header.png?v=1" alt="Logo" class="topbar-logo-img">
+      </div>
       
       <div style="margin-left:auto; display:flex; align-items:center; gap:8px" class="topbar-zoom-wrapper">
         <span style="font-size:11px; color:var(--text-secondary); font-weight:600">ZOOM:</span>
@@ -263,25 +262,34 @@
 <script src="js/utils.js?v=2.9"></script>
 <script src="js/engine.js?v=2.9"></script>
 <script src="js/api.js?v=2.9"></script>
-<script src="js/operational_registry.js?v=3.0"></script>
+<script src="js/operational_registry.js?v=3.5"></script>
 <script src="js/admin_notifications.js?v=2.9"></script>
 <script src="js/seed_complex_data.js?v=2.9"></script>
-<script src="js/teachers.js?v=2.9"></script>
-<script src="js/schedule.js?v=2.9"></script>
+<script src="js/teachers.js?v=3.5"></script>
+<script src="js/schedule.js?v=3.7"></script>
 <script src="js/absences.js?v=2.9"></script>
 <script src="js/substitutions.js?v=2.9"></script>
 <script src="js/daily_overview.js?v=2.9"></script>
-<script src="js/teacher_self_service.js?v=2.9"></script>
+<script src="js/teacher_self_service.js?v=3.1"></script>
 <script src="js/reports.js?v=2.9"></script>
 <script src="js/settings.js?v=2.9"></script>
 <script src="js/import_export.js?v=2.9"></script>
 <script src="js/events.js?v=2.9"></script>
 <script src="js/organigramma.js?v=2.9"></script>
-<script src="js/app.js?v=3.0"></script>
+<script src="js/app.js?v=3.4"></script>
 <script>
 // Google Sign-In fallback trigger
 function triggerGoogleSignIn() {
   handleGoogleSignIn();
+}
+
+// Registrazione sicura Service Worker PWA (Passthrough - zero cache trap)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('[PWA] Service Worker registrato con successo:', reg.scope))
+      .catch(err => console.warn('[PWA] Avviso registrazione Service Worker:', err));
+  });
 }
 </script>
 </body>

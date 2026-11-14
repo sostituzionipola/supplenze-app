@@ -28,8 +28,7 @@ const APP = (() => {
     teacher_self_service: 'La Mia Area Docente',
     admin_notifications: 'Richieste Docenti',
     import_export: 'Importa ed Esporta Dati',
-    events: 'Eventi Scolastici',
-    login_preview: 'Schermata Login'
+    events: 'Eventi Scolastici'
   };
   
   const navItems = [
@@ -56,8 +55,7 @@ const APP = (() => {
       admin_notifications: typeof AdminNotificationsView !== 'undefined' ? AdminNotificationsView : { render: (c) => c.innerHTML = 'Errore caricamento Notifiche' },
       import_export: typeof ImportExportView !== 'undefined' ? ImportExportView : { render: (c) => c.innerHTML = 'Errore caricamento Importa ed Esporta Dati' },
       events: typeof EventsView !== 'undefined' ? EventsView : { render: (c) => c.innerHTML = 'Errore caricamento Eventi Scolastici' },
-      organigramma: typeof OrganigrammaView !== 'undefined' ? OrganigrammaView : { render: (c, s) => OrganigrammaView.render(c, s) },
-      login_preview: { render: (c) => renderLoginPreview(c) }
+      organigramma: typeof OrganigrammaView !== 'undefined' ? OrganigrammaView : { render: (c, s) => OrganigrammaView.render(c, s) }
     };
     return VIEWS;
   }
@@ -400,7 +398,6 @@ const APP = (() => {
     const currentViews = getViews();
     if (!currentViews[v]) return;
     
-    if (v === 'login_preview' && !isAdminMaster()) { toast('Accesso negato.', 'warning'); return; }
     if (v === 'settings' && !isAdminMaster()) { toast('Accesso riservato ad Admin Master.', 'warning'); return; }
     if (['teachers', 'import_export', 'admin_notifications'].includes(v) && !isAdmin()) {
       toast('Permessi insufficienti.', 'warning'); return;
@@ -702,7 +699,6 @@ const APP = (() => {
     showIf('.nav-item[data-view="admin_notifications"]', isAdminOrMaster);
     showIf('.nav-item[data-view="import_export"]', isAdminOrMaster);
     showIf('.nav-item[data-view="settings"]', isMaster); // Solo Admin Master!
-    showIf('#nav-login-preview', isMaster);
     showIf('#nav-instr-admin', isAdminOrMaster);
 
     // Principale (visibili a tutti)
@@ -901,9 +897,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (zoomSel) {
     const saved = localStorage.getItem('ui_zoom') || '1.0';
     zoomSel.value = saved;
-    document.body.style.zoom = saved;
+    const applyZoom = (val) => {
+      document.body.style.zoom = '';
+      const ca = document.querySelector('.content-area');
+      if (ca) ca.style.zoom = val;
+    };
+    applyZoom(saved);
     zoomSel.onchange = (e) => {
-      document.body.style.zoom = e.target.value;
+      applyZoom(e.target.value);
       localStorage.setItem('ui_zoom', e.target.value);
     };
   }

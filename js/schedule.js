@@ -50,46 +50,46 @@ var ScheduleView = (() => {
       </div>
 
       <!-- SELETTORE RAPIDO ORARIO PROVVISORIO / DEFINITIVO -->
-      <div class="sched-type-selector-card" style="margin-top:16px; padding:10px 16px; background:var(--bg-secondary); border-radius:10px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <span style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;">Tabellone Attivo:</span>
-          <div class="btn-group" style="background:var(--bg-card); padding:3px; border-radius:var(--radius); border:1px solid var(--border); display:inline-flex; gap:4px">
-            <button class="btn btn-sm ${_scheduleType==='provvisorio'?'btn-primary':'btn-ghost'}" id="sched-type-provvisorio" style="font-weight:700;">
+      <div class="sched-type-selector-card">
+        <div class="sched-type-row">
+          <span class="sched-type-label">Tabellone Attivo:</span>
+          <div class="btn-group sched-type-btn-group">
+            <button class="btn btn-sm ${_scheduleType==='provvisorio'?'btn-primary':'btn-ghost'}" id="sched-type-provvisorio">
               ⏳ Orario Provvisorio
             </button>
-            <button class="btn btn-sm ${_scheduleType==='definitivo'?'btn-primary':'btn-ghost'}" id="sched-type-definitivo" style="font-weight:700;">
+            <button class="btn btn-sm ${_scheduleType==='definitivo'?'btn-primary':'btn-ghost'}" id="sched-type-definitivo">
               📅 Orario Definitivo
             </button>
           </div>
         </div>
-        <div id="sched-vigenza-info" style="font-size:12px; font-weight:600; color:var(--text-secondary);">
+        <div id="sched-vigenza-info" class="sched-vigenza-text">
           Caricamento periodo di vigenza...
         </div>
       </div>
 
-      <div class="toolbar" style="margin-top:16px; flex-wrap:wrap; gap:8px;">
-        <div class="toolbar-left" style="flex-wrap:wrap; gap:8px;">
-          <div class="search-box">
+      <div class="toolbar sched-toolbar-container">
+        <div class="sched-filter-row">
+          <div class="search-box sched-search-box">
             <span class="s-icon">🔍</span>
             <input type="text" id="sched-search" placeholder="Cerca per Docente, Materia o Classe…"/>
           </div>
-          <select class="filter-select" id="sched-sort">
+          <select class="filter-select sched-sort-select" id="sched-sort">
             <option value="name_asc">Nome (A-Z)</option>
             <option value="name_desc">Nome (Z-A)</option>
             <option value="subject">Materia</option>
           </select>
-          <div class="btn-group" style="background:var(--bg-card); padding:3px; border-radius:var(--radius); border:1px solid var(--border); display:inline-flex; gap:3px">
-            <button class="btn btn-sm ${_viewMode==='completo'?'btn-primary':'btn-ghost'}" id="view-completo">📊 Vista Completa</button>
-            <button class="btn btn-sm ${_viewMode==='giorno'?'btn-primary':'btn-ghost'}" id="view-giorno">📆 Per Giorno</button>
-            <button class="btn btn-sm ${_viewMode==='docente'?'btn-primary':'btn-ghost'}" id="view-docente">👤 Per Docente</button>
-          </div>
-          <div class="btn-group" style="background:var(--bg-card); padding:3px; border-radius:var(--radius); border:1px solid var(--border); display:inline-flex; gap:3px; margin-left: 8px;">
-            <button class="btn btn-sm ${_filterMode==='tutto'?'btn-primary':'btn-ghost'}" id="filter-tutto">👁️ Tutto</button>
-            <button class="btn btn-sm ${_filterMode==='classi'?'btn-primary':'btn-ghost'}" id="filter-classi">📖 Solo Classi</button>
-            <button class="btn btn-sm ${_filterMode==='dis_ecc'?'btn-primary':'btn-ghost'}" id="filter-dis-ecc">⚡ Dis/Ecc</button>
-          </div>
         </div>
-        <div class="toolbar-right">
+        <div class="btn-group sched-views-group">
+          <button class="btn btn-sm ${_viewMode==='completo'?'btn-primary':'btn-ghost'}" id="view-completo">📊 Vista Completa</button>
+          <button class="btn btn-sm ${_viewMode==='giorno'?'btn-primary':'btn-ghost'}" id="view-giorno">📆 Per Giorno</button>
+          <button class="btn btn-sm ${_viewMode==='docente'?'btn-primary':'btn-ghost'}" id="view-docente">👤 Per Docente</button>
+        </div>
+        <div class="btn-group sched-filters-group">
+          <button class="btn btn-sm ${_filterMode==='tutto'?'btn-primary':'btn-ghost'}" id="filter-tutto">👁️ Tutto</button>
+          <button class="btn btn-sm ${_filterMode==='classi'?'btn-primary':'btn-ghost'}" id="filter-classi">📖 Solo Classi</button>
+          <button class="btn btn-sm ${_filterMode==='dis_ecc'?'btn-primary':'btn-ghost'}" id="filter-dis-ecc">⚡ Dis/Ecc</button>
+        </div>
+        <div class="sched-export-row">
           <button class="btn btn-ghost" id="sched-export-btn">🖨️ Esporta / Stampa</button>
         </div>
       </div>
@@ -476,7 +476,7 @@ var ScheduleView = (() => {
       <div class="table-wrapper" style="border:1px solid #334155;"><table class="ov-master-table">
         <thead style="background:#0f172a"><tr>
           <th style="min-width:60px; color:#94a3b8; font-size:10px; text-align:center;">Ora</th>
-          ${teachers.map(t => `<th style="min-width:100px; color:#94a3b8; font-size:10px; font-weight:700;">${escHtml(t.name.split(' ')[0])}</th>`).join('')}
+          ${teachers.map(t => `<th style="min-width:100px; color:#94a3b8; font-size:10px; font-weight:700;">${escHtml(t.name)}</th>`).join('')}
         </tr></thead>
         <tbody style="background:#1e293b">`;
     hours.forEach(h => {
@@ -560,13 +560,13 @@ var ScheduleView = (() => {
         <table class="ov-master-table">
           <thead>
             <tr>
-              <th class="sticky-col" style="min-width:120px; text-align:left;">MATERIA</th>
-              <th class="sticky-col-2" style="min-width:150px; text-align:left;">DOCENTE</th>
+              <th class="sticky-col-teacher" style="min-width:140px; text-align:left;">DOCENTE</th>
+              <th class="col-subject" style="min-width:90px; text-align:left;">MATERIA</th>
               ${DAYS.map(d => `<th colspan="${HOURS_BY_DAY[d].length}" style="border-right:2px solid var(--border-thick); text-align:center;">${d}</th>`).join('')}
             </tr>
             <tr>
-              <th class="sticky-col"></th>
-              <th class="sticky-col-2"></th>
+              <th class="sticky-col-teacher"></th>
+              <th class="col-subject"></th>
               ${DAYS.map(d => HOURS_BY_DAY[d].map(h => `<th style="min-width:50px; font-size:9px">${h}ª</th>`).join('')).join('')}
             </tr>
           </thead>
@@ -575,8 +575,8 @@ var ScheduleView = (() => {
 
     teachers.forEach(t => {
       html += `<tr>
-        <td class="sticky-col" style="font-weight:700; color:var(--accent-hover)">${escHtml((t.subject||'—').toUpperCase())}</td>
-        <td class="sticky-col-2" style="font-weight:600">${escHtml(t.name.toUpperCase())}</td>`;
+        <td class="sticky-col-teacher" style="font-weight:700;">${escHtml(t.name.toUpperCase())}</td>
+        <td class="col-subject" style="font-weight:600; color:var(--accent-hover)">${escHtml((t.subject||'—').toUpperCase())}</td>`;
       
       DAYS.forEach(d => {
         const slots = _schedule.filter(s => s.teacher_id == t.id && s.day == d);
