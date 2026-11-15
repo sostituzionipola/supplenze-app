@@ -83,7 +83,7 @@ var ImportExportView = (() => {
               <button class="btn btn-primary" id="btn-imp-sched-prov" style="width:100%; justify-content:center; gap:8px;">
                 📥 Importa Orario Provvisorio
               </button>
-              <div style="display:flex; gap:8px;">
+              <div class="import-card-btn-row" style="display:flex; gap:8px;">
                 <button class="btn btn-secondary btn-sm" id="btn-tmpl-sched-prov" style="flex:1; justify-content:center;">
                   📄 Template (.xlsx)
                 </button>
@@ -111,7 +111,7 @@ var ImportExportView = (() => {
               <button class="btn btn-primary" id="btn-imp-sched-def" style="width:100%; justify-content:center; gap:8px;">
                 📥 Importa Orario Definitivo
               </button>
-              <div style="display:flex; gap:8px;">
+              <div class="import-card-btn-row" style="display:flex; gap:8px;">
                 <button class="btn btn-secondary btn-sm" id="btn-tmpl-sched-def" style="flex:1; justify-content:center;">
                   📄 Template (.xlsx)
                 </button>
@@ -136,7 +136,7 @@ var ImportExportView = (() => {
               <button class="btn btn-primary" id="btn-imp-debt" style="width:100%; justify-content:center; gap:8px;">
                 ⚖️ Importa Debiti
               </button>
-              <div style="display:flex; gap:8px;">
+              <div class="import-card-btn-row" style="display:flex; gap:8px;">
                 <button class="btn btn-secondary btn-sm" id="btn-tmpl-debt" style="flex:1; justify-content:center;">
                   📄 Template Debiti (.xlsx)
                 </button>
@@ -161,7 +161,7 @@ var ImportExportView = (() => {
               <button class="btn btn-primary" id="btn-imp-ricevimento" style="width:100%; justify-content:center; gap:8px;">
                 📥 Importa Ricevimenti
               </button>
-              <div style="display:flex; gap:8px;">
+              <div class="import-card-btn-row" style="display:flex; gap:8px;">
                 <button class="btn btn-secondary btn-sm" id="btn-tmpl-ricevimento" style="flex:1; justify-content:center;">
                   📄 Template R (.xlsx)
                 </button>
@@ -186,7 +186,7 @@ var ImportExportView = (() => {
               <button class="btn btn-primary" id="btn-imp-dis" style="width:100%; justify-content:center; gap:8px;">
                 📥 Importa Disponibilità (DIS)
               </button>
-              <div style="display:flex; gap:8px;">
+              <div class="import-card-btn-row" style="display:flex; gap:8px;">
                 <button class="btn btn-secondary btn-sm" id="btn-tmpl-dis" style="flex:1; justify-content:center;">
                   📄 Template DIS (.xlsx)
                 </button>
@@ -211,7 +211,7 @@ var ImportExportView = (() => {
               <button class="btn btn-primary" id="btn-imp-ecc" style="width:100%; justify-content:center; gap:8px;">
                 📥 Importa Ore Eccedenti (ECC)
               </button>
-              <div style="display:flex; gap:8px;">
+              <div class="import-card-btn-row" style="display:flex; gap:8px;">
                 <button class="btn btn-secondary btn-sm" id="btn-tmpl-ecc" style="flex:1; justify-content:center;">
                   📄 Template ECC (.xlsx)
                 </button>
@@ -252,7 +252,7 @@ var ImportExportView = (() => {
               <button class="btn btn-primary" id="btn-upload-organigramma" style="width:100%; justify-content:center; gap:8px;">
                 📥 ${orgData?.filename ? 'Sostituisci PDF' : 'Carica PDF Organigramma'}
               </button>
-              <div style="display:flex; gap:8px;">
+              <div class="import-card-btn-row" style="display:flex; gap:8px;">
                 <button class="btn btn-secondary btn-sm" id="btn-view-organigramma" style="flex:1; justify-content:center;" ${!orgData?.url ? 'disabled' : ''}>
                   👁️ Visualizza
                 </button>
@@ -278,7 +278,7 @@ var ImportExportView = (() => {
               <button class="btn btn-primary" id="btn-view-teachers" style="width:100%; justify-content:center; gap:8px;">
                 👁️ Consulta Anagrafica
               </button>
-              <div style="display:flex; gap:8px;">
+              <div class="import-card-btn-row" style="display:flex; gap:8px;">
                 <button class="btn btn-secondary btn-sm" id="btn-tmpl-teachers" style="flex:1; justify-content:center;">
                   📄 Template Docenti (.xlsx)
                 </button>
@@ -304,7 +304,7 @@ var ImportExportView = (() => {
             <span style="color:var(--text-primary); font-weight:600;">Nota di sicurezza:</span> L'anagrafica, i profili e le email dei docenti <strong>NON</strong> vengono cancellati, garantendo la continuità degli account.
           </p>
 
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+          <div class="danger-zone-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
             <button class="btn btn-ghost" id="btn-danger-clear-prov" style="color:#ffffff; background:#dc2626; border:1px solid #b91c1c; justify-content:center; padding:10px 14px; font-weight:600;">
               🗑️ Svuota Orario Provvisorio
             </button>
