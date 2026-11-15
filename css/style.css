@@ -394,23 +394,32 @@ tbody td:last-child{border-right:none}
   .modal-footer {
     background: var(--bg-card) !important;
     border-top: 1px solid var(--border) !important;
-    padding: 12px 16px !important;
+    padding: 12px 14px !important;
     padding-bottom: max(14px, calc(10px + env(safe-area-inset-bottom))) !important;
-    padding-left: max(16px, env(safe-area-inset-left)) !important;
-    padding-right: max(16px, env(safe-area-inset-right)) !important;
+    padding-left: max(14px, env(safe-area-inset-left)) !important;
+    padding-right: max(14px, env(safe-area-inset-right)) !important;
     flex-shrink: 0 !important;
-    display: flex !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
     gap: 10px !important;
-    justify-content: flex-end !important;
     align-items: center !important;
-    flex-wrap: wrap !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
   }
   .modal-footer .btn {
     min-height: 44px !important;
-    padding: 10px 16px !important;
-    font-size: 14px !important;
+    padding: 10px 12px !important;
+    font-size: 13.5px !important;
     font-weight: 600 !important;
     border-radius: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+  }
+  .modal-footer .btn:only-child {
+    grid-column: span 2 !important;
   }
 }
 
@@ -732,11 +741,16 @@ tr:hover td { background: var(--bg-hover); }
     font-size: 8.5px !important;
     line-height: 1.1 !important;
   }
-  .page-header .flex { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .page-header { margin-bottom: 12px !important; }
+  .page-title { font-size: 16.5px !important; line-height: 1.25 !important; margin-bottom: 2px !important; }
+  .page-subtitle { font-size: 11.5px !important; line-height: 1.35 !important; }
+  .page-header .flex { flex-direction: column; align-items: flex-start; gap: 12px; }
   .toolbar-right { width: 100%; }
   .toolbar-right .date-navigator { width: 100%; justify-content: space-between; }
+  .reg-columnar-table th, .reg-columnar-table td { padding: 4px 3px !important; }
+  .reg-columnar-table .hour-badge-large { width: 30px !important; height: 30px !important; font-size: 12px !important; }
   .card {
-    padding: 14px 12px;
+    padding: 12px 10px;
   }
   .top-bar {
     padding-top: max(22px, calc(20px + env(safe-area-inset-top))) !important;
