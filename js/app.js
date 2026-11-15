@@ -1075,6 +1075,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const zoomSel = document.getElementById('ui-zoom-select');
   if (zoomSel) {
+    const isMobile = () => window.innerWidth <= 768;
     let saved = localStorage.getItem('ui_zoom');
     if (!saved || parseFloat(saved) < 0.9) {
       saved = '0.9';
@@ -1083,16 +1084,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const applyZoom = (val) => {
       document.body.style.zoom = '';
       const ca = document.querySelector('.content-area');
-      if (ca) {
-        ca.style.zoom = val;
-        const num = parseFloat(val) || 1;
-        ca.style.minHeight = `calc(100% / ${num})`;
+      if (!ca) return;
+      if (isMobile()) {
+        ca.style.zoom = '';
+        ca.style.minHeight = '';
+        return;
       }
+      ca.style.zoom = val;
+      const num = parseFloat(val) || 1;
+      ca.style.minHeight = `calc(100% / ${num})`;
     };
     applyZoom(saved);
     zoomSel.onchange = (e) => {
       applyZoom(e.target.value);
       localStorage.setItem('ui_zoom', e.target.value);
     };
+    window.addEventListener('resize', () => {
+      applyZoom(zoomSel.value);
+    });
   }
 });

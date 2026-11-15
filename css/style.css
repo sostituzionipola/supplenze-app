@@ -754,7 +754,7 @@ tr:hover td { background: var(--bg-hover); }
   .content-area {
     padding-left: max(16px, env(safe-area-inset-left));
     padding-right: max(16px, env(safe-area-inset-right));
-    padding-bottom: max(24px, calc(16px + env(safe-area-inset-bottom)));
+    padding-bottom: max(80px, calc(64px + env(safe-area-inset-bottom))) !important;
   }
   .topbar-zoom-wrapper {
     display: none !important;
