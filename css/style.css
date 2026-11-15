@@ -1618,29 +1618,24 @@ thead .reg-sticky-hour {
   }
 }
 
-/* ── DESKTOP PC (LAYOUT NATIVO COMPATTO 100% SENZA ZOOM) ── */
+/* ── DESKTOP PC (SCALA FISSA 90% A TUTTA ALTEZZA SENZA SPAZIO IN FONDO) ── */
 @media (min-width: 769px) {
-  /* Dimensioni native calibrate a grandezza naturale (100%): niente proprietà zoom */
-  :root {
-    --sidebar-width: 235px;
-    --topbar-height: 54px;
-  }
   html, body {
-    font-size: 12.8px !important;
-    min-height: 100% !important;
-    height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
   }
   #app {
-    min-height: 100vh !important;
-    min-height: 100dvh !important;
-    height: 100% !important;
-    width: 100% !important;
+    zoom: 0.90;
+    height: calc(100vh / 0.90) !important;
+    height: calc(100dvh / 0.90) !important;
+    min-height: calc(100vh / 0.90) !important;
+    width: calc(100% / 0.90) !important;
     align-items: stretch !important;
+    overflow: hidden !important;
   }
   .sidebar {
-    min-height: 100vh !important;
     min-height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
