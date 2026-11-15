@@ -1618,14 +1618,27 @@ thead .reg-sticky-hour {
   }
 }
 
-/* ── DESKTOP PC (DENSITÀ OTTIMIZZATA E SBLOCCO TABELLA) ── */
-@media (min-width: 1025px) {
+/* ── DESKTOP PC (SCALA NATIVA 90% E PROTEZIONE ANTI-SCHIACCIAMENTO) ── */
+@media (min-width: 769px) {
+  /* Scala base 90% nativa per tutto il sito da PC: il 90% diventa il nuovo 100% */
+  body {
+    zoom: 0.90;
+  }
+
   /* Sblocco altezza registro operativo e orario per mostrare l'intera tabella senza tagli */
   .reg-table-scroll-wrapper,
   .ov-master-wrapper {
     max-height: none !important;
     overflow-y: visible !important;
     overflow-x: auto !important;
+  }
+
+  /* Protezione anti-schiacciamento: impedisce alle tabelle di deformarsi a sottiletta */
+  .reg-columnar-table {
+    min-width: 1100px !important;
+  }
+  .ov-master-table {
+    min-width: 1000px !important;
   }
 
   /* Densità compatta Registro Operativo */
