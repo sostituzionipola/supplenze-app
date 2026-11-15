@@ -1617,3 +1617,119 @@ thead .reg-sticky-hour {
     gap: 2px !important;
   }
 }
+
+/* ── DESKTOP PC: LAYOUT NATIVO COMPATTO (SCALA 90% NATIVA A PIENA ALTEZZA) ── */
+@media (min-width: 769px) {
+  /* Variabili e caratteri calibrati nativamente alla dimensione compatta: zero proprietà zoom */
+  :root {
+    --sidebar-width: 234px;
+    --topbar-height: 54px;
+  }
+
+  html, body {
+    font-size: 12.6px !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #app {
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+  }
+
+  .sidebar {
+    height: 100% !important;
+    min-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .sidebar-footer {
+    margin-top: auto !important;
+  }
+
+  .main-content {
+    height: 100% !important;
+    min-height: 100% !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  .content-area {
+    flex: 1 !important;
+    padding: 20px !important;
+    overflow-y: auto !important;
+  }
+
+  /* Sblocco altezza registro operativo e orario per mostrare l'intera tabella senza tagli */
+  .reg-table-scroll-wrapper,
+  .ov-master-wrapper {
+    max-height: none !important;
+    overflow-y: visible !important;
+    overflow-x: auto !important;
+  }
+
+  /* Protezione anti-schiacciamento: impedisce alle tabelle di deformarsi */
+  .reg-columnar-table {
+    min-width: 1050px !important;
+  }
+  .ov-master-table {
+    min-width: 950px !important;
+  }
+
+  /* Densità compatta Registro Operativo */
+  .reg-columnar-table th {
+    padding: 6px 8px !important;
+    font-size: 10.5px !important;
+  }
+  .reg-columnar-table td {
+    padding: 4px 6px !important;
+    font-size: 11.5px !important;
+  }
+  .reg-columnar-table .hour-badge-large {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 11.5px !important;
+    border-radius: 6px !important;
+  }
+  .reg-columnar-table .ts-control {
+    min-height: 28px !important;
+    padding: 2px 6px !important;
+    font-size: 11px !important;
+  }
+  .reg-columnar-table .ts-control .item {
+    font-size: 11px !important;
+    padding: 1px 4px !important;
+  }
+
+  /* Densità tabelle operative: Gestione Docenti, Orario, Eventi, Richieste */
+  #teachers-table th,
+  #teachers-table td,
+  .ov-master-table th,
+  .ov-master-table td,
+  .table-wrapper table th,
+  .table-wrapper table td {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+
+  /* Pulsanti operativi compatti su PC */
+  .reg-columnar-table .btn,
+  #teachers-table .btn,
+  .table-wrapper .btn,
+  .teachers-toolbar-right .btn {
+    padding: 4px 8px !important;
+    font-size: 11.5px !important;
+    min-height: auto !important;
+  }
+}
+
