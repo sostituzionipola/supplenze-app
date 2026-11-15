@@ -1618,11 +1618,20 @@ thead .reg-sticky-hour {
   }
 }
 
-/* ── DESKTOP PC (SCALA NATIVA 90% E PROTEZIONE ANTI-SCHIACCIAMENTO) ── */
+/* ── DESKTOP PC (LAYOUT NATIVO COMPATTO 100% SENZA ZOOM) ── */
 @media (min-width: 769px) {
-  /* Scala base 90% nativa per tutto il sito da PC: il 90% diventa il nuovo 100% */
-  body {
-    zoom: 0.90;
+  /* Dimensioni native calibrate a grandezza naturale (100%): niente proprietà zoom */
+  :root {
+    --sidebar-width: 235px;
+    --topbar-height: 54px;
+  }
+  html, body {
+    font-size: 12.8px !important;
+  }
+  #app {
+    height: 100vh !important;
+    height: 100dvh !important;
+    width: 100% !important;
   }
 
   /* Sblocco altezza registro operativo e orario per mostrare l'intera tabella senza tagli */
