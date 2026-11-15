@@ -1,5 +1,5 @@
 # REGOLE OPERATIVE DI SICUREZZA PER L'ECOSISTEMA PROF. MEMMO
-# Versione 2.4 - Consolidata, Blindata e Armonizzata (27 Ottobre 2026)
+# Versione 2.5 - Consolidata, Blindata e Armonizzata (15 Novembre 2026)
 
 Tutti gli agenti AI e i programmatori che operano sui repository dell'Ecosistema Prof. Memmo DEVONO rispettare rigorosamente le seguenti regole inderogabili.
 
@@ -208,20 +208,32 @@ Valido tassativamente per tutte le applicazioni e siti presenti e futuri dell'Ec
 ---
 
 ### ART. 14 - PROTOCOLLO DI CONGELAMENTO COMPONENTI STABILIZZATI E DIVIETO DI MODIFICA (FROZEN COMPONENTS GUARD)
-1. **Definizione di Componente Congelato / Stabilizzato**:
+1. **Definizione di Componente Congelato / Stabilizzato (Ecosistema Giochi & Hub)**:
    - Sono dichiarati formalmente **CONGELATI E STABILIZZATI** tutti i componenti trasversali che hanno raggiunto la conformità di ecosistema:
      1. **Header Globale e Navigazione Superiore** (Branding, loghi, proporzioni, allineamenti, layout responsive).
      2. **Menù a Tendina Profilo (User Dropdown)**: logica di autenticazione Firebase, SSO, lettura avatar e switch di ruolo.
      3. **Footer Istituzionale di Copyright Patamu**: altezza fissa esatta a 52px, modali legali condivise.
      4. **Meccaniche di Gioco Collaudate** e schermate di partita a turni validate.
-2. **Divieto Assoluto di Modifica Diretta (Freeze Lock)**:
+
+2. **Perimetro Componenti Congelati & Stabilizzati - Gestionale Supplenze (Release v3.9)**:
+   - Nell'applicazione autonoma **Supplenze App**, a partire dal traguardo `ECOSISTEMA_V3.9_STABLE_FREEZE` / `SUPPLENZE_V3.9_STABLE_FREEZE`, sono dichiarati formalmente **CONGELATI E BLINDATI**:
+     1. **Branding, Topbar & Identità Visiva**: Nuovo logo ufficiale del pinguino (`logo-header.png`, `logo.png`), proporzioni desktop e mobile, set favicon multi-dimensione (`favicon.ico`, `favicon.png`, `apple-touch-icon.png`), theme-color uniforme (`#111827`) e barra superiore pulita senza sfumature/ombre parassite.
+     2. **Architettura Desktop PC & Protezione Zoom**: Layout nativo PC a grandezza 100% calibrata (valore base 0.9 = 100%), sidebar e body ancorati a piena altezza (`100dvh`) senza spazio vuoto residuo in fondo al monitor, selettore ZOOM isolato solo su PC desktop (nascosto su smartphone), blocco attivo anti-zoom-out involontario da touchpad.
+     3. **Mobile PWA & Touch Architecture (iOS & Android)**: Safe-area per Dynamic Island e gesture bar, modali con footer responsive in griglia 50/50 anti-sbordamento, pulsanti touch ad altezza >= 44px, pulsanti espliciti di annullamento segnalazione assenza, tabelle (Registro e Orario) con scorrimento touch fluido senza vincoli arbitrari di `max-height`.
+     4. **Area Docente (Self-Service) & Catalogo Assenze**: 13 tipologie normative d'assenza con disclaimers dinamici differenziati (malattia vs malattia a ore, ferie con conteggio sostituti, permessi non recuperabili, ecc.), contatori per diritto allo studio (150 ore) e permessi personali.
+     5. **Orario & Vigenza (Blocchi 3 e 4)**: Sincronizzazione sincrona tra Orario Provvisorio e Definitivo, gestione spezzoni orari / nomine e sdoppiamento Cognomi/Nomi con generazione email istituzionale automatica.
+     6. **Pagine Informative e Legali Interne**: Privacy Policy, Termini d'Uso, Istruzioni Docenti e Guida Amministratore come viste native interne nel rispetto dell'autenticazione e dell'header.
+
+3. **Divieto Assoluto di Modifica Diretta (Freeze Lock)**:
    - È fatto divieto assoluto all'agente di modificare, rifattorizzare, applicare pezze o alterare il codice di un componente congelato, anche in presenza di segnalazioni di anomalie o dubbi dell'utente.
-3. **Obbligo di Arresto in Read-Only e Notifica Preventiva di Congelamento**:
+
+4. **Obbligo di Arresto in Read-Only e Notifica Preventiva di Congelamento**:
    - Se l'utente o il contesto portano l'attenzione su un componente o un comportamento appartenente a un blocco congelato, l'agente DEVE:
      1. Arrestare immediatamente l'esecuzione in modalità rigorosamente **READ-ONLY**.
      2. Notificare esplicitamente all'utente: *"Attenzione: la parte indicata fa parte del blocco CONGELATO e STABILIZZATO dell'Ecosistema. Per preservare l'integrità ed evitare regressioni a catena, non effettuerò alcuna modifica senza la tua esplicita autorizzazione."*
      3. Fornire una diagnosi obiettiva e attendere l'ordine scritto esplicito dell'utente prima di toccare qualsiasi file.
-4. **Bando ai Falsi Positivi di Compilazione**:
+
+5. **Bando ai Falsi Positivi di Compilazione**:
    - È fatto divieto assoluto di considerare risolto un problema o conforme un componente basandosi esclusivamente sull'esito positivo del compilatore (`npm run build`, assenza di errori di sintassi o linter). L'unico criterio di conformità valido è il comportamento a runtime nel browser reale su tutte le piattaforme supportate.
 
 ---
