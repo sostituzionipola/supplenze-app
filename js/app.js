@@ -30,7 +30,9 @@ const APP = (() => {
     import_export: 'Importa ed Esporta Dati',
     events: 'Eventi Scolastici',
     instructions_teacher: 'Istruzioni Docenti',
-    instructions_admin: 'Istruzioni Admin'
+    instructions_admin: 'Istruzioni Admin',
+    privacy: 'Privacy Policy',
+    terms: 'Termini di Servizio'
   };
   
   const navItems = [
@@ -59,7 +61,9 @@ const APP = (() => {
       events: typeof EventsView !== 'undefined' ? EventsView : { render: (c) => c.innerHTML = 'Errore caricamento Eventi Scolastici' },
       organigramma: typeof OrganigrammaView !== 'undefined' ? OrganigrammaView : { render: (c, s) => OrganigrammaView.render(c, s) },
       instructions_teacher: { render: (c) => renderTeacherInstructionsPage(c) },
-      instructions_admin: { render: (c) => renderAdminInstructionsPage(c) }
+      instructions_admin: { render: (c) => renderAdminInstructionsPage(c) },
+      privacy: { render: (c) => renderPrivacyPage(c) },
+      terms: { render: (c) => renderTermsPage(c) }
     };
     return VIEWS;
   }
@@ -207,7 +211,109 @@ const APP = (() => {
     `;
   }
 
+  function renderTermsPage(container) {
+    container.innerHTML = `
+      <div class="page-header" style="margin-bottom:20px;">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+          <div>
+            <h1 class="page-title" style="font-size:22px; font-weight:800; display:flex; align-items:center; gap:10px;">
+              📜 Termini e Condizioni di Servizio
+            </h1>
+            <p class="page-subtitle" style="color:var(--text-secondary); font-size:13px; margin-top:4px;">
+              Condizioni d'uso e responsabilità per il personale dell'Istituto
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:960px; margin:0 auto; padding:24px 28px; line-height:1.75; font-size:13.5px; color:var(--text-primary);">
+        <div style="padding:16px 20px; background:var(--bg-secondary); border-radius:12px; border-left:4px solid var(--accent); margin-bottom:24px;">
+          <h3 style="margin:0 0 6px 0; color:var(--accent); font-size:16px;">I.C. "Padre A. Gemelli" &bull; Regolamento d'Uso</h3>
+          <p style="margin:0; font-size:13px; color:var(--text-secondary);">L'utilizzo del portale implica la presa visione e l'accettazione delle presenti condizioni operative.</p>
+        </div>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          1. Finalità del Servizio
+        </h3>
+        <p>L'applicativo <strong>"Registro Sostituzioni - I.C. Padre A. Gemelli"</strong> è uno strumento di supporto organizzativo destinato esclusivamente al personale docente e amministrativo dell'Istituto. Il servizio mira a ottimizzare la gestione delle sostituzioni e la comunicazione interna relativa all'orario scolastico.</p>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          2. Credenziali e Responsabilità
+        </h3>
+        <p>L'accesso avviene tramite account Google istituzionale (<code>@padregemelli.net</code>) o credenziali fornite dall'amministratore. L'utente è custode delle proprie credenziali e responsabile di ogni operazione effettuata sotto il proprio profilo. È fatto esplicito divieto di cedere le credenziali a terzi o consentire accessi non autorizzati.</p>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          3. Integrità dei Dati
+        </h3>
+        <p>L'inserimento di assenze, uscite didattiche e sostituzioni deve corrispondere al vero. Ogni manomissione o inserimento di dati mendaci potrà essere soggetta a verifiche amministrative. Nella fase attuale di sviluppo e rodaggio, i dati potrebbero essere resettati con preavviso minimo per ragioni tecniche e di manutenzione.</p>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          4. Proprietà Intellettuale
+        </h3>
+        <p>Il software, il layout e il sistema di gestione del registro sono proprietà intellettuale dell'I.C. "Padre A. Gemelli". Ne è vietata la riproduzione, la decompilazione o la diffusione a terzi senza autorizzazione esplicita della Direzione.</p>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          5. Limitazione di Responsabilità
+        </h3>
+        <p>L'Istituto non risponde di eventuali ritardi o disservizi derivanti da problemi di connettività esterna o dall'utilizzo improprio dell'applicazione da parte del personale.</p>
+      </div>
+    `;
+  }
+
+  function renderPrivacyPage(container) {
+    container.innerHTML = `
+      <div class="page-header" style="margin-bottom:20px;">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+          <div>
+            <h1 class="page-title" style="font-size:22px; font-weight:800; display:flex; align-items:center; gap:10px;">
+              ⚖️ Informativa Privacy (GDPR - Art. 13)
+            </h1>
+            <p class="page-subtitle" style="color:var(--text-secondary); font-size:13px; margin-top:4px;">
+              Trattamento dei dati personali e diritti dell'interessato ai sensi del Regolamento UE 2016/679
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:960px; margin:0 auto; padding:24px 28px; line-height:1.75; font-size:13.5px; color:var(--text-primary);">
+        <div style="padding:16px 20px; background:var(--bg-secondary); border-radius:12px; border-left:4px solid var(--accent); margin-bottom:24px;">
+          <h3 style="margin:0 0 6px 0; color:var(--accent); font-size:16px;">Informativa sul Trattamento dei Dati Personali</h3>
+          <p style="margin:0; font-size:13px; color:var(--text-secondary);">Ai sensi dell'art. 13 del Regolamento UE 2016/679 (GDPR), si forniscono le seguenti informazioni sul trattamento dei dati nel Registro Sostituzioni.</p>
+        </div>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          Titolare del Trattamento
+        </h3>
+        <p>Il Titolare del trattamento è l'<strong>I.C. "Padre A. Gemelli"</strong>, nella persona del Dirigente Scolastico pro tempore.</p>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          Finalità e Base Giuridica
+        </h3>
+        <p>Il trattamento dei dati personali (nome, cognome, indirizzo email istituzionale, ore di servizio, assenze e sostituzioni) è necessario per l'esecuzione di un <strong>compito di interesse pubblico</strong> connesso all'esercizio di pubblici poteri di cui è investito il Titolare, ovvero la gestione organizzativa dell'organico e la continuità didattica dell'Istituzione Scolastica.</p>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          Destinatari dei Dati
+        </h3>
+        <p>I dati sono accessibili esclusivamente al personale amministrativo autorizzato e, limitatamente al registro delle sostituzioni e all'orario di plesso, al personale docente abilitato alla consultazione. Non è prevista la diffusione o la cessione dei dati a soggetti terzi estranei all'Istituzione Scolastica, salvo espressi obblighi di legge.</p>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          Periodo di Conservazione
+        </h3>
+        <p>I dati saranno conservati per l'intera durata dell'anno scolastico in corso e successivamente archiviati secondo i termini di legge previsti per la documentazione amministrativo-scolastica.</p>
+
+        <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          Diritti dell'Interessato
+        </h3>
+        <p>Gli interessati hanno il diritto di chiedere al Titolare del trattamento l'accesso ai propri dati personali, la rettifica, la cancellazione degli stessi o la limitazione del trattamento che li riguarda, nonché di proporre reclamo all'Autorità Garante per la Protezione dei Dati Personali.</p>
+      </div>
+    `;
+  }
+
   function showTermsModal() {
+    if (state.user && document.getElementById('content-area')) {
+      navigate('terms');
+      return;
+    }
     modal({
       title: '📋 Termini e Condizioni di Servizio',
       body: `
@@ -234,6 +340,10 @@ const APP = (() => {
   }
 
   function showPrivacyModal() {
+    if (state.user && document.getElementById('content-area')) {
+      navigate('privacy');
+      return;
+    }
     modal({
       title: '⚖️ Informativa Privacy (GDPR - Art. 13)',
       body: `
@@ -937,11 +1047,11 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Sidebar Legal & Info Links
   document.getElementById('nav-privacy')?.addEventListener('click', () => {
-    APP.showPrivacyModal();
+    APP.navigate('privacy');
     if (window.innerWidth <= 1024) closeMobileSidebar();
   });
   document.getElementById('nav-terms')?.addEventListener('click', () => {
-    APP.showTermsModal();
+    APP.navigate('terms');
     if (window.innerWidth <= 1024) closeMobileSidebar();
   });
   document.getElementById('nav-instr-teacher')?.addEventListener('click', () => {
