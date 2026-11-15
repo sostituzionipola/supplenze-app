@@ -12,6 +12,8 @@ var TeacherSelfServiceView = (() => {
   const HOURS_BY_DAY = { LUNEDI:[8,9,10,11,12,13,14,15], MARTEDI:[8,9,10,11,12,13], MERCOLEDI:[8,9,10,11,12,13,14,15], GIOVEDI:[8,9,10,11,12,13,14,15], VENERDI:[8,9,10,11,12,13] };
 
   let _tab = 'notifiche';
+  let _rootContainer = null;
+  let _lastState = null;
   let _teacherId = null;
   let _yearId = null;
   let _teacher = null;
@@ -20,6 +22,8 @@ var TeacherSelfServiceView = (() => {
   let _allSchedule = [];
 
   async function render(container, state) {
+    _rootContainer = container || document.getElementById('content-area');
+    _lastState = state;
     _teacherId = state.user?.teacher_id || 100;
     _yearId = state.yearId;
 
@@ -524,6 +528,20 @@ var TeacherSelfServiceView = (() => {
       if (tipoFerEl?.checked) updateFerieSubs(); 
     });
 
+    const returnToNotifiche = () => {
+      _tab = 'notifiche';
+      const notifBtn = document.getElementById('ts-tab-notifiche');
+      if (notifBtn) {
+        notifBtn.click();
+      } else {
+        const root = _rootContainer || document.getElementById('content-area');
+        if (root) render(root, _lastState || state);
+      }
+    };
+
+    container.querySelector('#ts-cancel-top-btn')?.addEventListener('click', returnToNotifiche);
+    container.querySelector('#ts-cancel-bottom-btn')?.addEventListener('click', returnToNotifiche);
+
     form.onsubmit = async (e) => {
       e.preventDefault();
       const rawType = container.querySelector('input[name="ts-abs-tipo"]:checked')?.value || 'assenza_giornaliera';
@@ -561,17 +579,9 @@ var TeacherSelfServiceView = (() => {
       try {
         await API.post('/absences', payload);
         APP.toast('Segnalazione inviata!', 'success');
-        _tab = 'notifiche';
-        render(container.closest('.view-container') || container.parentElement.parentElement, state);
+        returnToNotifiche();
       } catch(err) { APP.toast(err.message, 'error'); }
     };
-
-    const cancelAction = () => {
-      _tab = 'notifiche';
-      render(container.closest('.view-container') || container.parentElement.parentElement, state);
-    };
-    container.querySelector('#ts-cancel-top-btn')?.addEventListener('click', cancelAction);
-    container.querySelector('#ts-cancel-bottom-btn')?.addEventListener('click', cancelAction);
 
     updateTipoStyle();
     if (tipoFerEl?.checked) updateFerieSubs();
