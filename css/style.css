@@ -1617,3 +1617,61 @@ thead .reg-sticky-hour {
     gap: 2px !important;
   }
 }
+
+/* ── DESKTOP PC (DENSITÀ OTTIMIZZATA E SBLOCCO TABELLA) ── */
+@media (min-width: 1025px) {
+  /* Sblocco altezza registro operativo e orario per mostrare l'intera tabella senza tagli */
+  .reg-table-scroll-wrapper,
+  .ov-master-wrapper {
+    max-height: none !important;
+    overflow-y: visible !important;
+    overflow-x: auto !important;
+  }
+
+  /* Densità compatta Registro Operativo */
+  .reg-columnar-table th {
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+  }
+  .reg-columnar-table td {
+    padding: 4px 6px !important;
+    font-size: 12px !important;
+  }
+  .reg-columnar-table .hour-badge-large {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+  }
+  .reg-columnar-table .ts-control {
+    min-height: 28px !important;
+    padding: 2px 6px !important;
+    font-size: 11px !important;
+  }
+  .reg-columnar-table .ts-control .item {
+    font-size: 11px !important;
+    padding: 1px 4px !important;
+  }
+
+  /* Densità tabelle operative: Gestione Docenti, Orario, Eventi, Richieste */
+  #teachers-table th,
+  #teachers-table td,
+  .ov-master-table th,
+  .ov-master-table td,
+  .table-wrapper table th,
+  .table-wrapper table td {
+    padding: 6px 10px !important;
+    font-size: 12.5px !important;
+  }
+
+  /* Pulsanti operativi compatti su PC */
+  .reg-columnar-table .btn,
+  #teachers-table .btn,
+  .table-wrapper .btn,
+  .teachers-toolbar-right .btn {
+    padding: 4px 8px !important;
+    font-size: 11.5px !important;
+    min-height: auto !important;
+  }
+}
+
