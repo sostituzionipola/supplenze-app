@@ -1627,11 +1627,30 @@ thead .reg-sticky-hour {
   }
   html, body {
     font-size: 12.8px !important;
+    min-height: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   #app {
-    height: 100vh !important;
-    height: 100dvh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    height: 100% !important;
     width: 100% !important;
+    align-items: stretch !important;
+  }
+  .sidebar {
+    min-height: 100vh !important;
+    min-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .sidebar-footer {
+    margin-top: auto !important;
+  }
+  .main-content {
+    min-height: 100% !important;
+    flex: 1 !important;
   }
 
   /* Sblocco altezza registro operativo e orario per mostrare l'intera tabella senza tagli */
