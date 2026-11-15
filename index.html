@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="favicon.png?v=10">
   <link rel="icon" type="image/png" sizes="512x512" href="favicon.png?v=10">
   <link rel="manifest" href="manifest.json?v=10">
-  <link rel="stylesheet" href="css/style.css?v=3.13">
+  <link rel="stylesheet" href="css/style.css?v=3.14">
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
@@ -278,18 +278,26 @@
 <script src="js/organigramma.js?v=2.9"></script>
 <script src="js/app.js?v=3.6"></script>
 <script>
-// Blocco zoom verso il basso sotto il 100% su PC (impedisce 80%, 70%, 60%, 50%)
-window.addEventListener('keydown', (e) => {
-  if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_' || e.keyCode === 189 || e.keyCode === 109)) {
-    e.preventDefault();
+// Blocco rigoroso zoom verso il basso sotto il 100% su PC (impedisce 80%, 70%, 60%, 50%)
+const preventZoomOut = (e) => {
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === '-' || e.key === '_' || e.code === 'Minus' || e.code === 'NumpadSubtract' || e.keyCode === 189 || e.keyCode === 109) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   }
-}, { passive: false });
+};
+window.addEventListener('keydown', preventZoomOut, { capture: true, passive: false });
+document.addEventListener('keydown', preventZoomOut, { capture: true, passive: false });
 
-window.addEventListener('wheel', (e) => {
+const preventWheelZoomOut = (e) => {
   if (e.ctrlKey && e.deltaY > 0) {
     e.preventDefault();
+    e.stopPropagation();
   }
-}, { passive: false });
+};
+window.addEventListener('wheel', preventWheelZoomOut, { capture: true, passive: false });
+document.addEventListener('wheel', preventWheelZoomOut, { capture: true, passive: false });
 
 // Google Sign-In fallback trigger
 function triggerGoogleSignIn() {
