@@ -192,7 +192,7 @@ var OperationalRegistryView = (() => {
              <strong style="font-size:20px;">Registro Operativo Sostituzioni</strong><br/>
              Data: <strong>${fmtDate(_currentDate)}</strong>
           </div>
-          <div class="reg-table-scroll-wrapper" style="max-height: calc(100vh - 270px); overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+          <div class="reg-table-scroll-wrapper" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
           <table class="reg-columnar-table" style="width:100%; border-collapse: separate; border-spacing: 0;">
             <thead style="position: sticky; top: 0; z-index: 90;">
               <tr>

@@ -556,7 +556,7 @@ var ScheduleView = (() => {
     }
     
     let html = emptyNotice + `
-      <div class="ov-master-wrapper" style="max-height:calc(100vh - 220px)">
+      <div class="ov-master-wrapper" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
         <table class="ov-master-table">
           <thead>
             <tr>
