@@ -201,8 +201,9 @@ var TeacherSelfServiceView = (() => {
     if (!container) return;
     container.innerHTML = `
       <div class="card mb-20" style="border:2px solid var(--accent);">
-        <div class="card-header border-b mb-16">
+        <div class="card-header border-b mb-16" style="display:flex; justify-content:space-between; align-items:center;">
           <h3 class="card-title">📝 Nuova Segnalazione Assenza</h3>
+          <button type="button" class="btn btn-ghost btn-sm" id="ts-cancel-top-btn" style="color:var(--text-secondary); font-size:12px;">← Torna alle Notifiche</button>
         </div>
         <form id="ts-absence-form">
           <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:10px; margin-bottom:16px;">
@@ -355,7 +356,10 @@ var TeacherSelfServiceView = (() => {
             <label>Motivazione (facoltativo)</label>
             <textarea id="abs-reason" class="form-control" rows="2" placeholder="Es. Motivi personali, Visita specialistica..."></textarea>
           </div>
-          <button type="submit" class="btn btn-primary" style="width:100%; font-weight:700;">Invia Segnalazione</button>
+          <div style="display:flex; gap:10px; margin-top:20px;">
+            <button type="button" class="btn btn-secondary" id="ts-cancel-bottom-btn" style="flex:1; justify-content:center; font-weight:600;">✕ Annulla</button>
+            <button type="submit" class="btn btn-primary" style="flex:2; justify-content:center; font-weight:700;">Invia Segnalazione</button>
+          </div>
         </form>
       </div>
     `;
@@ -561,6 +565,13 @@ var TeacherSelfServiceView = (() => {
         render(container.closest('.view-container') || container.parentElement.parentElement, state);
       } catch(err) { APP.toast(err.message, 'error'); }
     };
+
+    const cancelAction = () => {
+      _tab = 'notifiche';
+      render(container.closest('.view-container') || container.parentElement.parentElement, state);
+    };
+    container.querySelector('#ts-cancel-top-btn')?.addEventListener('click', cancelAction);
+    container.querySelector('#ts-cancel-bottom-btn')?.addEventListener('click', cancelAction);
 
     updateTipoStyle();
     if (tipoFerEl?.checked) updateFerieSubs();

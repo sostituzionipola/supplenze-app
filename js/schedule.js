@@ -473,10 +473,10 @@ var ScheduleView = (() => {
   function renderDayTable(teachers, day) {
     const hours = HOURS_BY_DAY[day] || [8,9,10,11,12,13];
     let html = `<h3 style="margin:12px 0 8px; font-size:15px;">${DAY_LABELS[day]}</h3>
-      <div class="table-wrapper" style="border:1px solid #334155;"><table class="ov-master-table">
+      <div class="table-wrapper" style="border:1px solid #334155; margin:0 auto; width:100%;"><table class="ov-master-table" style="margin:0 auto;">
         <thead style="background:#0f172a"><tr>
           <th style="min-width:60px; color:#94a3b8; font-size:10px; text-align:center;">Ora</th>
-          ${teachers.map(t => `<th style="min-width:100px; color:#94a3b8; font-size:10px; font-weight:700;">${escHtml(t.name)}</th>`).join('')}
+          ${teachers.map(t => `<th style="min-width:100px; color:#94a3b8; font-size:10px; font-weight:700; text-align:center;">${escHtml(t.name)}</th>`).join('')}
         </tr></thead>
         <tbody style="background:#1e293b">`;
     hours.forEach(h => {
