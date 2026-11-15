@@ -1091,8 +1091,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       ca.style.zoom = val;
-      const num = parseFloat(val) || 1;
-      ca.style.minHeight = `calc(100% / ${num})`;
+      ca.style.minHeight = '';
     };
     applyZoom(saved);
     zoomSel.onchange = (e) => {

@@ -457,7 +457,7 @@ var OperationalRegistryView = (() => {
         💡 <strong>Modalità Rapida o Dettagliata</strong>: Puoi inserire un'assenza rapida da regolarizzare in seguito, oppure scegliere subito la tipologia specifica (Uscite, Ferie, Permessi, ecc.). È possibile selezionare più docenti contemporaneamente.
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+      <div class="abs-tipo-grid" style="margin-bottom:20px;">
         <label id="tipo-rapido-lbl" style="display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:10px; cursor:pointer; border:2px solid var(--accent); background:var(--accent-light);">
           <input type="radio" name="abs-tipo" id="tipo-rapido" value="da_regolarizzare" checked style="width:16px;height:16px;">
           <div><div style="font-weight:700; font-size:12px;">⚡ Assenza Rapida</div><div style="font-size:10px; color:var(--text-secondary);">Da regolarizzare dopo</div></div>
