@@ -562,7 +562,7 @@ var OperationalRegistryView = (() => {
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-12">
+      <div class="grid grid-cols-2 gap-12" id="m-abs-dates-wrapper">
         <div class="form-group"><label>Dal giorno</label><input type="date" id="m-abs-start" class="form-control" value="${_currentDate}" required></div>
         <div class="form-group"><label>Al giorno</label><input type="date" id="m-abs-end" class="form-control" value="${_currentDate}" min="${_currentDate}"></div>
       </div>

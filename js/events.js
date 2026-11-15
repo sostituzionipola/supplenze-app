@@ -44,7 +44,7 @@ var EventsView = (() => {
           <div class="flex justify-between items-center">
             <div>
               <div class="page-title">📅 Eventi Scolastici</div>
-              <p class="text-muted" style="font-size: 13px; margin-top: 4px;">Pianificazione e condivisione attività scolastiche</p>
+              <p class="text-muted" style="font-size: 13px; margin-top: 4px;">Pianificazione e condivisione attività</p>
             </div>
             <button class="btn btn-primary" id="event-add-btn">
               <span style="font-size: 18px; margin-right: 8px;">+</span> Aggiungi Evento

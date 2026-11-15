@@ -34,9 +34,9 @@ var TeacherSelfServiceView = (() => {
         <div class="page-subtitle" id="ts-subtitle">Caricamento...</div>
       </div>
 
-      <div id="ts-stats-bar" style="margin-top:12px; display:flex; gap:16px; flex-wrap:wrap;"></div>
+      <div id="ts-stats-bar" style="margin-top:12px; margin-bottom:24px; display:flex; gap:16px; flex-wrap:wrap;"></div>
 
-      <div class="mt-20 mb-24" style="display:flex; flex-direction:column; gap:10px;">
+      <div style="margin-top:20px; margin-bottom:24px; display:flex; flex-direction:column; gap:10px;">
         <div class="ts-nav-tabs">
           <button class="btn btn-sm ${_tab==='notifiche'?'btn-primary':'btn-ghost'}" id="ts-tab-notifiche">🔔 Notifiche</button>
           <button class="btn btn-sm ${_tab==='orario'?'btn-primary':'btn-ghost'}" id="ts-tab-orario">📅 Orario</button>
@@ -326,7 +326,7 @@ var TeacherSelfServiceView = (() => {
 
           <div class="form-group">
             <label>Periodo (Dal... al...)</label>
-            <div class="grid grid-cols-2 gap-8">
+            <div class="grid grid-cols-2 gap-8" id="ts-abs-dates-wrapper">
               <input type="date" id="abs-date-start" class="form-control" value="${todayISO()}" required>
               <input type="date" id="abs-date-end" class="form-control" value="${todayISO()}" min="${todayISO()}">
             </div>
