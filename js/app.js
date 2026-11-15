@@ -1075,12 +1075,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const zoomSel = document.getElementById('ui-zoom-select');
   if (zoomSel) {
-    const saved = localStorage.getItem('ui_zoom') || '1.0';
+    let saved = localStorage.getItem('ui_zoom');
+    if (!saved || parseFloat(saved) < 0.9) {
+      saved = '0.9';
+    }
     zoomSel.value = saved;
     const applyZoom = (val) => {
       document.body.style.zoom = '';
       const ca = document.querySelector('.content-area');
-      if (ca) ca.style.zoom = val;
+      if (ca) {
+        ca.style.zoom = val;
+        const num = parseFloat(val) || 1;
+        ca.style.minHeight = `calc(100% / ${num})`;
+      }
     };
     applyZoom(saved);
     zoomSel.onchange = (e) => {
