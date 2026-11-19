@@ -233,10 +233,12 @@ select option{background:var(--bg-secondary)}
 textarea{resize:vertical;min-height:80px}
 
 /* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid transparent;transition:background .15s,color .15s,box-shadow .15s;white-space:nowrap;user-select:none;outline:none;box-sizing:border-box;min-width:fit-content}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid transparent;transition:background .15s,color .15s,box-shadow .15s;white-space:nowrap;user-select:none;outline:none;box-sizing:border-box;min-width:fit-content}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 .btn-primary:hover:not(:disabled){background:var(--accent-hover);box-shadow:0 4px 12px rgba(99,102,241,.4)}
+.btn-accent{background:var(--accent-light);color:var(--accent-hover);border-color:var(--accent)}
+.btn-accent:hover:not(:disabled){background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(99,102,241,.4)}
 .btn-secondary{background:transparent;color:var(--text-primary);border-color:var(--border-hover)}
 .btn-secondary:hover:not(:disabled){background:var(--bg-hover)}
 .btn-danger{background:transparent;color:var(--danger-text);border-color:var(--danger)}

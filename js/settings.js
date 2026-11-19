@@ -53,7 +53,7 @@ var SettingsView = (() => {
       const logs = (await API.get('/settings/log')) || [];
       
       el.innerHTML = `
-        <div class="card">
+        <div class="card" style="max-width:1200px; margin:0 auto;">
           <div class="card-header" style="flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center;">
             <div>
               <div class="card-title">📜 Log Attività &amp; Accessi</div>
@@ -187,37 +187,52 @@ var SettingsView = (() => {
       const years = await API.get('/settings/years');
       const isAdminMaster = APP.getState().user?.role === 'admin_master';
       el.innerHTML = `
-        <div class="card">
-          <div class="card-header">
+        <div class="card" style="max-width:900px; margin:0 auto;">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div class="card-title">Anni Scolastici</div>
-            <div style="display:flex;gap:8px">
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
               ${isAdminMaster ? `
-                <button class="btn btn-secondary btn-sm" id="reset-db-btn">🗑 Ripristina Esempi</button>
-                <button class="btn btn-accent btn-sm" id="seed-test-btn">🧪 Carica Dati Test</button>
+                <button class="btn btn-secondary btn-sm" id="reset-db-btn" style="justify-content:center;">🗑 Ripristina Esempi</button>
+                <button class="btn btn-accent btn-sm" id="seed-test-btn" style="justify-content:center;">🧪 Carica Dati Test</button>
               ` : ''}
-              <button class="btn btn-primary btn-sm" id="add-year-btn">+ Nuovo Anno</button>
+              <button class="btn btn-primary btn-sm" id="add-year-btn" style="justify-content:center;">+ Nuovo Anno</button>
             </div>
           </div>
-          <div class="table-wrapper"><table>
-            <thead><tr><th>Anno</th><th>Inizio</th><th>Fine</th><th>Stato</th><th>Azioni</th></tr></thead>
-            <tbody>${years.map(y=>{
-              return `
-              <tr>
-                <td><strong>${escHtml(y.name)}</strong></td>
-                <td>${fmtDate(y.start_date)}</td><td>${fmtDate(y.end_date)}</td>
-                <td>${y.is_active?'<span class="badge badge-success">✓ Attivo</span>':'<span class="badge badge-neutral">Inattivo</span>'}</td>
-                <td style="display:flex;gap:4px">
-                  ${!y.is_active?`<button class="btn btn-success btn-sm" onclick="SettingsView.activateYear(${y.id})">Attiva</button>`:''}
-                  <button class="btn btn-ghost btn-sm" onclick="SettingsView.deleteYear(${y.id})">🗑️</button>
-                </td>
-              </tr>`;
-            }).join('')}
-            </tbody></table></div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Anno</th>
+                  <th style="text-align:center;">Inizio</th>
+                  <th style="text-align:center;">Fine</th>
+                  <th style="text-align:center;">Stato</th>
+                  <th style="text-align:center;">Azioni</th>
+                </tr>
+              </thead>
+              <tbody>${years.map(y=>{
+                return `
+                <tr>
+                  <td style="text-align:left;"><strong>${escHtml(y.name)}</strong></td>
+                  <td style="text-align:center;">${fmtDate(y.start_date)}</td>
+                  <td style="text-align:center;">${fmtDate(y.end_date)}</td>
+                  <td style="text-align:center;">${y.is_active?'<span class="badge badge-success">✓ Attivo</span>':'<span class="badge badge-neutral">Inattivo</span>'}</td>
+                  <td style="text-align:center;">
+                    <div style="display:inline-flex; gap:6px; align-items:center; justify-content:center;">
+                      ${!y.is_active?`<button class="btn btn-success btn-sm" onclick="SettingsView.activateYear(${y.id})">Attiva</button>`:''}
+                      <button class="btn btn-ghost btn-sm" onclick="SettingsView.deleteYear(${y.id})" title="Elimina anno">🗑️</button>
+                    </div>
+                  </td>
+                </tr>`;
+              }).join('')}
+              </tbody>
+            </table>
+          </div>
         </div>`;
       el.querySelector('#add-year-btn').onclick = openYearModal;
       el.querySelector('#seed-test-btn')?.addEventListener('click', async () => {
         if (await APP.confirm('Caricare lo scenario di simulazione (15 docenti, classi e orari) per l\'anno selezionato?')) {
-          const res = await SeedData.run(yearId);
+          const targetYearId = _yearId || APP.getState().yearId;
+          const res = await SeedData.run(targetYearId);
           APP.toast(res.message, 'success');
           loadTab();
         }
@@ -268,7 +283,7 @@ var SettingsView = (() => {
     try {
       const classes = await API.get(`/settings/classes?year_id=${yearId}`);
       el.innerHTML = `
-        <div class="card">
+        <div class="card" style="max-width:900px; margin:0 auto;">
           <div class="card-header">
             <div><div class="card-title">Classi (${classes.length})</div></div>
             <div style="display:flex;gap:8px">
@@ -337,7 +352,7 @@ var SettingsView = (() => {
       const ROLES = { admin_master: '👑 Admin Master', admin:'Amministratore', secretary:'Segreteria', director:'Dirigente', teacher:'Docente' };
       const ROLE_BADGES = { admin_master:'badge-warning', admin:'badge-danger', director:'badge-accent', secretary:'badge-warning', teacher:'badge-neutral' };
       el.innerHTML = `
-        <div class="card">
+        <div class="card" style="max-width:1200px; margin:0 auto;">
           <div class="card-header"><div class="card-title">Utenti (${users.length})</div>${isAdminMaster ? '<button class="btn btn-primary btn-sm" id="add-user-btn">+ Nuovo Utente</button>' : ''}</div>
           <div class="table-wrapper"><table>
             <thead><tr><th>Username</th><th>Ruolo</th><th>Docente collegato</th><th>Creato il</th>${isAdminMaster ? '<th>Azioni</th>' : ''}</tr></thead>
@@ -407,7 +422,7 @@ var SettingsView = (() => {
   async function loadTestMode(el) {
     const simActive = APP.isSimulationMode();
     el.innerHTML = `
-      <div class="card" style="max-width:720px;">
+      <div class="card" style="max-width:720px; margin:0 auto;">
         <div class="card-header" style="justify-content:space-between; align-items:center;">
           <div>
             <div class="card-title">🧪 Modalità Test / Simulazione</div>
@@ -464,7 +479,7 @@ var SettingsView = (() => {
   function renderPasswordChange() {
     const el = document.getElementById('settings-content');
     el.innerHTML = `
-      <div class="card" style="max-width:420px">
+      <div class="card" style="max-width:420px; margin:0 auto;">
         <div class="card-header"><div class="card-title">🔐 Cambia Password</div></div>
         <div class="form-group"><label>Password attuale *</label><input type="password" id="pw-current"/></div>
         <div class="form-group"><label>Nuova password *</label><input type="password" id="pw-new"/></div>
