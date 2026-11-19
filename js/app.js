@@ -390,9 +390,39 @@ const APP = (() => {
       </div>
 
       <div class="card" style="max-width:960px; margin:0 auto; padding:24px 28px; line-height:1.75; font-size:13.5px; color:var(--text-primary);">
-        <div style="padding:16px 20px; background:var(--bg-secondary); border-radius:12px; border-left:4px solid var(--accent); margin-bottom:24px;">
-          <h3 style="margin:0 0 6px 0; color:var(--accent); font-size:16px;">🚀 Guida Rapida Docenti</h3>
-          <p style="margin:0; font-size:13px; color:var(--text-secondary);">Benvenuto nel portale gestionale dell'I.C. Padre A. Gemelli. Qui puoi gestire le tue assenze, consultare l'orario scolastico e confermare le sostituzioni assegnate.</p>
+        <!-- BOX TUTORIAL RAPIDO DOCENTI (Mobile-Friendly & Additivo) -->
+        <div style="padding:18px 20px; background:var(--bg-secondary); border-radius:12px; border-left:4px solid var(--accent); margin-bottom:24px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+          <h3 style="margin:0 0 8px 0; color:var(--accent); font-size:17px; font-weight:800; display:flex; align-items:center; gap:8px;">
+            🚀 Guida Rapida Docenti (Tutorial Essenziale)
+          </h3>
+          <p style="margin:0 0 14px 0; font-size:13px; color:var(--text-secondary); line-height:1.5;">
+            Benvenuto nel portale gestionale dell'I.C. Padre A. Gemelli. Qui puoi gestire le tue assenze, consultare l'orario scolastico e confermare le sostituzioni assegnate.
+          </p>
+
+          <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:14px; font-size:13px; line-height:1.6;">
+            <div style="font-weight:700; color:var(--accent); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+              💡 Regola fondamentale: App vs Registro Elettronico (RE)
+            </div>
+            <ul style="margin:0; padding-left:18px;">
+              <li><strong>Questa App (Supplenze):</strong> serve per l'<strong>organizzazione logistica</strong> (consultare orario e saldo ore, segnalare assenze e <em>accettare</em> le supplenze assegnate).</li>
+              <li><strong>Il Registro Elettronico (RE):</strong> serve per la <strong>certificazione formale della presenza e della vigilanza</strong>. Quando entri in classe a fare supplenza devi <strong>sempre firmare l'ora sul RE</strong> di classe!</li>
+            </ul>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:10px; font-size:13px;">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="background:var(--accent); color:#fff; font-weight:800; border-radius:50%; min-width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;">1</span>
+              <div><strong>👤 Profilo & Orario:</strong> Accedi alla tua <em>Area Docente</em> per consultare l'orario settimanale, il giorno/ora di ricevimento e il saldo aggiornato dei tuoi recuperi e delle ore svolte.</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="background:var(--accent); color:#fff; font-weight:800; border-radius:50%; min-width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;">2</span>
+              <div><strong>📝 Segnalazione Assenza:</strong> Clicca sul tasto <em>"➕ Segnala una tua assenza"</em> dal tuo profilo per comunicare tempestivamente permessi, malattie, ferie, formazione o uscite didattiche.</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="background:var(--accent); color:#fff; font-weight:800; border-radius:50%; min-width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;">3</span>
+              <div><strong>🤝 Supplenze & Accettazione:</strong> Se ti viene assegnata una sostituzione, riceverai una notifica. Apri la scheda <em>"Notifiche & Sostituzioni"</em> e clicca su <strong>"Accetta"</strong> (oppure rifiuta con motivazione). In aula, firma poi il Registro Elettronico.</div>
+            </div>
+          </div>
         </div>
 
         <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
@@ -425,7 +455,7 @@ const APP = (() => {
         <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
           ✍️ Gestione Sostituzioni Assegnate
         </h3>
-        <p>Se ti viene assegnata una sostituzione, riceverai una notifica. Dovrai recarti nella tua area personale (Tab "Notifiche & Sostituzioni") e cliccare su <strong>"Firma"</strong> per confermare.</p>
+        <p>Se ti viene assegnata una sostituzione, riceverai una notifica. Dovrai recarti nella tua area personale (Tab "Notifiche & Sostituzioni") e cliccare su <strong>"Accetta"</strong> per confermare.</p>
         <div class="badge badge-success" style="margin:8px 0 12px 0; display:inline-block;">⭐ Credito Ferie</div>
         <p>Se sostituisci un collega in <strong>Ferie</strong> o <strong>Formazione</strong>, l'ora ti verrà accreditata per scalare il tuo eventuale debito orario.</p>
 
@@ -461,9 +491,9 @@ const APP = (() => {
         <p>I congedi per <strong>Matrimonio (15 gg)</strong>, <strong>Formazione (5 gg)</strong>, <strong>Lutto (3 gg per evento)</strong> e <strong>Assemblee sindacali (10 h)</strong> spettano a tutto il personale secondo quanto previsto dal CCNL vigente. Per le supplenze brevi e saltuarie, i permessi per motivi personali sono fruibili fino a 8 giorni ad anno scolastico non retribuiti.</p>
         
         <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">
-          ✍️ Firma Sostituzioni Assegnate
+          ✍️ Accettazione Sostituzioni Assegnate
         </h3>
-        <p>Tutte le sostituzioni assegnate o concordate devono essere confermate digitalmente tramite il pulsante "Firma" nella sezione "Sostituzioni Assegnate" dell'Area Docente.</p>
+        <p>Tutte le sostituzioni assegnate o concordate devono essere confermate digitalmente tramite il pulsante "Accetta" nella sezione "Sostituzioni Assegnate" dell'Area Docente.</p>
       </div>
     `;
   }
@@ -489,9 +519,33 @@ const APP = (() => {
       </div>
 
       <div class="card" style="max-width:960px; margin:0 auto; padding:24px 28px; line-height:1.75; font-size:13.5px; color:var(--text-primary);">
-        <div style="padding:16px 20px; background:var(--accent-light); border-radius:12px; border-left:4px solid var(--accent); margin-bottom:24px;">
-          <h3 style="margin:0 0 6px 0; color:var(--accent); font-size:16px;">🛠️ Console Amministrativa</h3>
-          <p style="margin:0; font-size:13px; color:var(--text-secondary);">Guida operativa per la gestione del registro e delle emergenze quotidiane.</p>
+        <!-- BOX TUTORIAL RAPIDO AMMINISTRATORE (Mobile-Friendly & Additivo) -->
+        <div style="padding:18px 20px; background:var(--bg-secondary); border-radius:12px; border-left:4px solid var(--accent); margin-bottom:24px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+          <h3 style="margin:0 0 8px 0; color:var(--accent); font-size:17px; font-weight:800; display:flex; align-items:center; gap:8px;">
+            🛠️ Guida Rapida Amministrazione (Flusso Quotidiano)
+          </h3>
+          <p style="margin:0 0 14px 0; font-size:13px; color:var(--text-secondary); line-height:1.5;">
+            Guida essenziale per la gestione del Registro Operativo e la copertura rapida delle emergenze e supplenze quotidiane.
+          </p>
+
+          <div style="display:flex; flex-direction:column; gap:10px; font-size:13px;">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="background:var(--accent); color:#fff; font-weight:800; border-radius:50%; min-width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;">1</span>
+              <div><strong>📋 Registra o Verifica Assenze:</strong> Controlla le assenze inviate dai docenti oppure clicca su <strong>"+ Nuova Sostituzione"</strong> / inserimento rapido per registrare un'assenza improvvisa del giorno.</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="background:var(--accent); color:#fff; font-weight:800; border-radius:50%; min-width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;">2</span>
+              <div><strong>🧩 Assegna i Supplenti:</strong> Nel <em>Registro Operativo</em>, seleziona per ogni ora scoperta il supplente ideale dalle colonne automatiche ordinate per priorità (<em>Compresenza</em> &rarr; <em>Compresenza altre sezioni</em> &rarr; <em>A Disposizione / Recupero</em> &rarr; <em>Ore Eccedenti</em>).</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="background:var(--accent); color:#fff; font-weight:800; border-radius:50%; min-width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;">3</span>
+              <div><strong>🔔 Notifica i Docenti:</strong> Clicca sul pulsante <strong>"Notifica Docenti"</strong> in alto a destra per inviare istantaneamente email/avvisi a tutti i docenti coinvolti nelle nuove supplenze.</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="background:var(--accent); color:#fff; font-weight:800; border-radius:50%; min-width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;">4</span>
+              <div><strong>👀 Monitora l'Accettazione:</strong> Verifica a colpo d'occhio la colonna <strong>"Accettazione"</strong>: <em>✔ verde</em> (accettata dal docente), <em>In attesa</em> (non ancora confermata, avvisare a voce se l'ora è imminente), <em>❌ rossa</em> (rifiutata con motivazione, ora da riassegnare).</div>
+            </div>
+          </div>
         </div>
 
         <h3 style="color:var(--accent); font-size:16px; margin:24px 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px;">

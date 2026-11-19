@@ -204,7 +204,7 @@ var OperationalRegistryView = (() => {
                 <th style="width:14%; background: var(--bg-secondary); border-bottom: 2px solid var(--border-thick); border-right: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">A Disposizione</th>
                 <th style="width:12%; background: var(--bg-secondary); border-bottom: 2px solid var(--border-thick); border-right: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Eccedenti/Str.</th>
                 <th style="width:10%; background: var(--bg-secondary); border-bottom: 2px solid var(--border-thick); border-right: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Oltre 5 Ore</th>
-                <th style="width:6%; background: var(--bg-card); border-bottom: 2px solid var(--border-thick); text-align:center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Firma</th>
+                <th style="width:6%; background: var(--bg-card); border-bottom: 2px solid var(--border-thick); text-align:center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Accettazione</th>
               </tr>
             </thead>
             <tbody>
@@ -288,6 +288,24 @@ var OperationalRegistryView = (() => {
 
       // Init TomSelect on all registry cell selects (must be after DOM injection)
       initRegistryCells(target, state);
+
+      // Ricalibra l'altezza del wrapper per eliminare lo spazio fantasma dello zoom su smartphone
+      const regTable = target.querySelector('.reg-columnar-table');
+      const regWrapper = target.querySelector('.reg-table-scroll-wrapper');
+      if (regTable && regWrapper) {
+        const fitWrapper = () => {
+          if (window.innerWidth <= 640) {
+            const rect = regTable.getBoundingClientRect();
+            if (rect && rect.height > 0) {
+              regWrapper.style.height = Math.ceil(rect.height) + 'px';
+            }
+          } else {
+            regWrapper.style.height = '';
+          }
+        };
+        requestAnimationFrame(fitWrapper);
+        window.addEventListener('resize', fitWrapper, { passive: true });
+      }
 
     } catch (e) {
       console.error(e);
@@ -839,12 +857,61 @@ var OperationalRegistryView = (() => {
   }
 
   async function emailAll(state) {
-     try {
-       const count = await API.post('/notifications/bulk', { date: _currentDate, year_id: state.yearId, creatorId: state.user?.id });
-       APP.toast(`Inviate ${count} notifiche con successo.`, 'success');
-     } catch(e) {
-       APP.toast(e.message, 'error');
-     }
+    try {
+      const allSubs = await API.get(`/substitutions/history?year_id=${state.yearId}`);
+      const todaySubs = (allSubs || []).filter(s => s.date === _currentDate && s.substitute_teacher_id);
+      
+      if (!todaySubs.length) {
+        return APP.toast('Nessuna sostituzione assegnata per questa data.', 'warning');
+      }
+
+      // Filtra le sostituzioni non ancora notificate (Anti-doppione)
+      const pendingSubs = todaySubs.filter(s => !s.notified);
+
+      if (!pendingSubs.length) {
+        return APP.toast('Tutte le sostituzioni per oggi risultano già notificate.', 'info');
+      }
+
+      const allTeachers = await API.get(`/teachers?year_id=${state.yearId}`);
+      const classes = await API.get(`/settings/classes?year_id=${state.yearId}`);
+
+      const itemsToNotify = [];
+      for (const sub of pendingSubs) {
+        const t = allTeachers.find(x => x.id == sub.substitute_teacher_id);
+        const absT = allTeachers.find(x => x.id == sub.absent_teacher_id);
+        const cls = classes.find(c => c.id == sub.class_id);
+        const hourNum = (sub.hour >= 8 && sub.hour <= 16) ? (sub.hour - 7) : sub.hour;
+        itemsToNotify.push({
+          sub_id: sub.id,
+          teacher_id: sub.substitute_teacher_id,
+          teacher_name: t?.name || 'Docente',
+          teacher_email: t?.email || '',
+          date: _currentDate,
+          hour: hourNum,
+          class_name: cls?.name || '?',
+          absent_teacher: absT?.name || 'Docente assente',
+          sub_role: sub.sub_role || 'Sostituzione',
+          type: 'assignment'
+        });
+      }
+
+      const listSummary = itemsToNotify.map(it => `• ${it.teacher_name} — ${it.hour}ª ora (Classe ${it.class_name})`).join('\n');
+      const proceed = await APP.confirm(`Inviare ${itemsToNotify.length} email di notifica per le nuove sostituzioni di oggi?\n\n${listSummary}`);
+      if (!proceed) return;
+
+      APP.toast('Invio notifiche in corso...', 'info');
+      const count = await API.post('/notifications/bulk', {
+        items: itemsToNotify,
+        date: _currentDate,
+        year_id: state.yearId,
+        operator: state.user?.username || state.user?.name || 'Segreteria'
+      });
+
+      APP.toast(`Inviate ${count} notifiche con successo!`, 'success');
+      loadAndRender(document.getElementById('content-area'), state);
+    } catch(e) {
+      APP.toast('Errore invio notifiche: ' + e.message, 'error');
+    }
   }
 
   async function shareRegistry(container) {

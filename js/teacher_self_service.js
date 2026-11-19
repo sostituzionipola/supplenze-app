@@ -182,7 +182,7 @@ var TeacherSelfServiceView = (() => {
       <div class="card mb-20">
         <div class="card-header border-b mb-16">
           <h3 class="card-title">✍️ Sostituzioni Assegnate</h3>
-          <span style="font-size:12px; color:var(--text-secondary);">Firma per confermare la presa in carico</span>
+          <span style="font-size:12px; color:var(--text-secondary);">Accetta per confermare la presa in carico</span>
         </div>
         <div id="ts-assignments"></div>
       </div>
@@ -618,7 +618,7 @@ var TeacherSelfServiceView = (() => {
         <div class="table-wrapper hide-mobile">
           <table class="table">
             <thead>
-              <tr><th>Data</th><th>Ora</th><th>Classe</th><th>Tipo</th><th>Firma / Risposta</th></tr>
+              <tr><th>Data</th><th>Ora</th><th>Classe</th><th>Tipo</th><th>Accettazione / Risposta</th></tr>
             </thead>
             <tbody>
               ${mySubs.map(s => {
@@ -626,11 +626,11 @@ var TeacherSelfServiceView = (() => {
                 if (s.status === 'rejected') {
                   statusHtml = `<span style="color:#ef4444; font-weight:bold; font-size:12px;">❌ Rifiutata</span>`;
                 } else if (s.accepted) {
-                  statusHtml = `<span style="color:#16a34a; font-weight:bold;">✅ Firmata</span>`;
+                  statusHtml = `<span style="color:#16a34a; font-weight:bold;">✅ Accettata</span>`;
                 } else {
                   statusHtml = `
                     <div style="display:flex; gap:6px; align-items:center;">
-                      <button class="btn btn-primary btn-sm" onclick="TeacherSelfServiceView.acceptAssignment(event,${s.id})">✍️ Firma</button>
+                      <button class="btn btn-primary btn-sm" onclick="TeacherSelfServiceView.acceptAssignment(event,${s.id})">✍️ Accetta</button>
                       <button class="btn btn-ghost btn-sm text-danger" style="font-size:12px;" onclick="TeacherSelfServiceView.rejectAssignment(event,${s.id})">❌ Rifiuta</button>
                     </div>
                   `;
@@ -661,13 +661,13 @@ var TeacherSelfServiceView = (() => {
             } else if (s.accepted) {
               statusMobileHtml = `
                 <div style="background:rgba(22,163,74,0.08); border:1px solid rgba(22,163,74,0.25); color:#16a34a; border-radius:8px; padding:10px; text-align:center; font-weight:700; font-size:13px;">
-                  ✅ Sostituzione Firmata
+                  ✅ Sostituzione Accettata
                 </div>`;
             } else {
               statusMobileHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px;">
                   <button class="btn btn-primary" style="min-height:44px; height:44px; justify-content:center; font-size:14px; font-weight:700; border-radius:10px; box-shadow:0 2px 6px rgba(99,102,241,0.25);" onclick="TeacherSelfServiceView.acceptAssignment(event,${s.id})">
-                    ✍️ Firma
+                    ✍️ Accetta
                   </button>
                   <button class="btn btn-secondary text-danger" style="min-height:44px; height:44px; justify-content:center; font-size:14px; font-weight:600; border-radius:10px; border-color:var(--danger);" onclick="TeacherSelfServiceView.rejectAssignment(event,${s.id})">
                     ❌ Rifiuta
@@ -1033,7 +1033,7 @@ async function renderOre(container, state) {
         <td>${s.hour}ª</td>
         <td><span class="badge ${isRec?'badge-info':'badge-warning'}">${isRec?'Recupero Ore':'Ore Eccedenti / Straordinario'}</span></td>
         <td>${escHtml(s.class_name||'—')}</td>
-        <td>${s.accepted ? '✅ Firmato' : '<span style="font-size:11px; color:var(--text-muted);">In attesa</span>'}</td>
+        <td>${s.accepted ? '✅ Accettato' : '<span style="font-size:11px; color:var(--text-muted);">In attesa</span>'}</td>
       </tr>`;
     }).join('');
 
@@ -1128,7 +1128,7 @@ async function renderOre(container, state) {
         </div>
         ${mySubs.length ? `<div class="table-wrapper" style="border:none; margin:0; border-radius:0;"><table style="width:100%; border-collapse:collapse; font-size:13px;">
           <thead><tr style="background:var(--bg-secondary);">
-            <th style="padding:7px 12px;">Giorno</th><th>Ora</th><th>Tipo</th><th>Classe</th><th>Firma</th>
+            <th style="padding:7px 12px;">Giorno</th><th>Ora</th><th>Tipo</th><th>Classe</th><th>Accettazione</th>
           </tr></thead>
           <tbody>${rowsHtml}</tbody>
         </table></div>` : '<div class="empty-state" style="padding:24px;">Nessuna sostituzione o recupero effettuato.</div>'}
@@ -1224,7 +1224,7 @@ async function generateDocument(container) {
     }
     if (sections.storico) {
       body += `<h2>📋 Storico Sostituzioni/Recuperi</h2>
-        <table><tr><th>Giorno</th><th>Ora</th><th>Tipo</th><th>Classe</th><th>Firma</th></tr>
+        <table><tr><th>Giorno</th><th>Ora</th><th>Tipo</th><th>Classe</th><th>Accettazione</th></tr>
         ${mySubs.map(s => `<tr>
           <td>${fmtDate(s.date)}</td><td>${s.hour}ª</td>
           <td>${s.hours_counted?'Recupero Ore':'Ore Eccedenti / Straordinario'}</td>
@@ -1247,7 +1247,7 @@ async function generateDocument(container) {
     }
     if (sections.supplenze) {
       body += `<h2>✍️ Sostituzioni e Accettazioni</h2>
-        <table><tr><th>Data</th><th>Ora</th><th>Classe</th><th>Tipo</th><th>Firmata</th></tr>
+        <table><tr><th>Data</th><th>Ora</th><th>Classe</th><th>Tipo</th><th>Accettata</th></tr>
         ${mySubs.map(s=>`<tr>
           <td>${fmtDate(s.date)}</td><td>${s.hour}ª</td><td>${s.class_name||'—'}</td>
           <td>${s.hours_counted?'Recupero':'Eccedente'}</td><td>${s.accepted?'✅':'—'}</td>

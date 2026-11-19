@@ -766,7 +766,7 @@ tr:hover td { background: var(--bg-hover); }
   .content-area {
     padding-left: max(16px, env(safe-area-inset-left));
     padding-right: max(16px, env(safe-area-inset-right));
-    padding-bottom: max(80px, calc(64px + env(safe-area-inset-bottom))) !important;
+    padding-bottom: max(20px, calc(16px + env(safe-area-inset-bottom))) !important;
   }
   .topbar-zoom-wrapper {
     display: none !important;
@@ -1422,6 +1422,10 @@ thead .reg-sticky-hour {
     zoom: 0.38 !important;
     width: 100% !important;
     -webkit-text-size-adjust: 100% !important;
+    margin-bottom: 0 !important;
+  }
+  .reg-table-scroll-wrapper {
+    overflow-y: hidden !important;
   }
 
   .ov-master-table {

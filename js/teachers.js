@@ -779,7 +779,7 @@ var TeachersView = (() => {
                     <td>${s.hour}ª</td>
                     <td><span class="badge ${isRec ? 'badge-info' : 'badge-warning'}">${isRec ? 'Recupero Ore' : 'Ore Eccedenti / Straordinario'}</span></td>
                     <td>${escHtml(s.class_name || '—')}</td>
-                    <td>${s.accepted ? '✅ Firmato' : '<span style="color:var(--text-muted); font-size:11px;">In attesa</span>'}</td>
+                    <td>${s.accepted ? '✅ Accettato' : '<span style="color:var(--text-muted); font-size:11px;">In attesa</span>'}</td>
                   </tr>`;
                 }).join('')}
               </tbody>
@@ -999,7 +999,7 @@ var TeachersView = (() => {
                     <td style="padding:6px 12px;"><strong>${fmtDate(s.date)}</strong></td>
                     <td>${s.hour}ª</td>
                     <td>${escHtml(s.class_name || '—')}</td>
-                    <td>${s.accepted ? '✅ Firmato' : '<span style="color:var(--text-muted); font-size:11px;">—</span>'}</td>
+                    <td>${s.accepted ? '✅ Accettato' : '<span style="color:var(--text-muted); font-size:11px;">—</span>'}</td>
                   </tr>`).join('')}
               </tbody>
             </table>
@@ -1162,7 +1162,7 @@ var TeachersView = (() => {
               <span class="tbadge green">Ore residue da recuperare: ${totalDebt}</span>
             </div>
             ${subs.length ? `<table>
-              <thead><tr><th>Giorno</th><th>Ora</th><th>Tipo</th><th>Classe</th><th>Firma</th></tr></thead>
+              <thead><tr><th>Giorno</th><th>Ora</th><th>Tipo</th><th>Classe</th><th>Accettazione</th></tr></thead>
               <tbody>${rows}</tbody>
             </table>` : '<p class="empty-note">Nessuna supplenza registrata nel periodo.</p>'}
           </div>`;

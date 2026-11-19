@@ -1073,6 +1073,114 @@ const Engine = (() => {
       }
       await db.collection('notifications').doc(String(id)).update({ read: true });
     },
+    sendEmail: async (to, subject, body) => {
+      if (isSandboxActive() || !window.GAS_EMAIL_WEBHOOK_URL) return;
+      try {
+        await fetch(window.GAS_EMAIL_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify([{ teacher_email: to, teacher_name: to, date: '', hour: '', class_name: '', absent_teacher: '', sub_role: subject }])
+        });
+      } catch (e) {
+        console.warn('[Engine.sendEmail]', e);
+      }
+    },
+    sendBulkNotifications: async (data) => {
+      const items = data.items || [];
+      if (!items.length) return 0;
+
+      const isSandbox = isSandboxActive();
+      const sDb = _getActiveDb();
+      const nowIso = new Date().toISOString();
+
+      // 1. Prepara payload per Google Apps Script Webhook
+      const emailPayload = items.map(it => ({
+        teacher_email: it.teacher_email,
+        teacher_name: it.teacher_name,
+        date: it.date,
+        hour: it.hour,
+        class_name: it.class_name,
+        absent_teacher: it.absent_teacher,
+        operator: data.operator || 'Segreteria / Admin',
+        sub_role: it.sub_role || 'Sostituzione',
+        type: it.type || 'assignment'
+      }));
+
+      // 2. Invio email reale via Google Apps Script (solo se non in simulazione)
+      if (!isSandbox && window.GAS_EMAIL_WEBHOOK_URL) {
+        try {
+          await fetch(window.GAS_EMAIL_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(emailPayload)
+          });
+        } catch (err) {
+          console.warn('[Engine] Errore invio webhook Google Apps Script:', err);
+        }
+      }
+
+      // 3. Creazione notifiche in-app e marcatura 'notified: true'
+      if (isSandbox) {
+        items.forEach(it => {
+          if (it.sub_id) {
+            const sub = (sDb.substitutions || []).find(s => s.id == it.sub_id);
+            if (sub) {
+              sub.notified = (it.type !== 'cancellation');
+              sub.notified_at = nowIso;
+            }
+          }
+          if (it.teacher_id) {
+            const notifTitle = it.type === 'cancellation' ? 'Sostituzione Annullata' : 'Nuova Sostituzione Assegnata';
+            const notifMsg = it.type === 'cancellation'
+              ? `La sostituzione del ${it.date} alla ${it.hour}ª ora in classe ${it.class_name} è stata annullata.`
+              : `Ti è stata assegnata una sostituzione alla ${it.hour}ª ora in classe ${it.class_name} per il giorno ${it.date}.`;
+            sDb.notifications = sDb.notifications || [];
+            sDb.notifications.push({
+              id: String(Date.now() + Math.random()),
+              teacher_id: Number(it.teacher_id),
+              title: notifTitle,
+              message: notifMsg,
+              date: it.date,
+              read: false,
+              created_at: nowIso
+            });
+          }
+        });
+        _saveSandbox(sDb);
+        return items.length;
+      }
+
+      // Firestore reale: batch commit atomico
+      const batch = db.batch();
+      for (const it of items) {
+        if (it.sub_id) {
+          const subRef = db.collection('substitutions').doc(String(it.sub_id));
+          batch.update(subRef, {
+            notified: (it.type !== 'cancellation'),
+            notified_at: nowIso
+          });
+        }
+        if (it.teacher_id) {
+          const notifId = String(Date.now() + Math.random());
+          const notifRef = db.collection('notifications').doc(notifId);
+          const notifTitle = it.type === 'cancellation' ? 'Sostituzione Annullata' : 'Nuova Sostituzione Assegnata';
+          const notifMsg = it.type === 'cancellation'
+            ? `La sostituzione del ${it.date} alla ${it.hour}ª ora in classe ${it.class_name} è stata annullata.`
+            : `Ti è stata assegnata una sostituzione alla ${it.hour}ª ora in classe ${it.class_name} per il giorno ${it.date}.`;
+          batch.set(notifRef, {
+            teacher_id: Number(it.teacher_id),
+            title: notifTitle,
+            message: notifMsg,
+            date: it.date,
+            read: false,
+            created_at: nowIso
+          });
+        }
+      }
+      await batch.commit();
+
+      return items.length;
+    },
 
     // ── CAMBIO PASSWORD ──
     changePassword: async (currentPw, newPw) => {

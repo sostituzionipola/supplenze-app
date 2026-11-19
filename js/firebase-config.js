@@ -13,3 +13,7 @@ const firebaseConfig = {
 
 // Esportazione globale (compatibilità con script caricati via tag)
 window.firebaseConfig = firebaseConfig;
+
+// Webhook Google Apps Script per Notifiche Email e Foglio Storico
+window.GAS_EMAIL_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxNXNrI6DR4nE5vVrSmI1vmpw8OOjPQUMP-rLvQKFva4a0lnoyqUi5-oXZV8dNWw3AO7Q/exec";
+

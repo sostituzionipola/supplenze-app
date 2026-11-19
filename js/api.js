@@ -100,6 +100,9 @@ const API = (() => {
       if (path === '/auth/change-password' && method === 'POST') return await Engine.changePassword(data.currentPassword, data.newPassword);
 
       // --- NOTIFICATIONS ---
+      if (path === '/notifications/bulk' && method === 'POST') {
+        return await Engine.sendBulkNotifications(data);
+      }
       if (path.startsWith('/notifications') && method === 'GET') {
         const sp = new URLSearchParams(path.split('?')[1] || '');
         return Engine.getNotifications(sp.get('teacher_id'));
