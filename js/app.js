@@ -1013,6 +1013,46 @@ const APP = (() => {
     });
   }
 
+  function triggerInviteColleague() {
+    const shareUrl = 'https://sostituzionipola.github.io/supplenze-app/';
+    const shareTitle = 'Gestionale Sostituzioni I.C. Padre A. Gemelli';
+    const shareText = 'Ecco il link per accedere e installare l\'app del Gestionale Sostituzioni:';
+
+    if (navigator.share) {
+      navigator.share({
+        title: shareTitle,
+        text: shareText,
+        url: shareUrl
+      }).catch(() => {});
+      return;
+    }
+
+    modal({
+      title: '✈️ Invita un Collega',
+      body: `
+        <div style="text-align:center; padding:10px 0;">
+          <div style="font-size:36px; margin-bottom:12px;">✉️ 📲</div>
+          <p style="font-size:13.5px; color:var(--text-secondary); margin-bottom:14px; line-height:1.5;">
+            Condividi il link dell'applicazione con i colleghi per permettere loro di accedere e installarla sullo smartphone:
+          </p>
+          <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-family:monospace; font-size:12px; margin-bottom:16px; word-break:break-all; color:var(--text-primary); user-select:all;">
+            ${shareUrl}
+          </div>
+          <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" id="btn-copy-invite-link" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => APP.toast('Link copiato negli appunti! Pronto da incollare.', 'success'))">
+              📋 Copia Link
+            </button>
+            <a class="btn btn-secondary btn-sm" href="https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + shareUrl)}" target="_blank" rel="noopener" style="text-decoration:none;">
+              💬 Invia su WhatsApp
+            </a>
+          </div>
+        </div>
+      `,
+      footer: '<button class="btn btn-ghost" style="width:100%" onclick="this.closest(\'.modal-overlay\').remove()">Chiudi</button>',
+      size: 'modal-sm'
+    });
+  }
+
   function logout() {
     API.setToken(null);
     localStorage.removeItem('sg_user');
@@ -1025,7 +1065,7 @@ const APP = (() => {
     init: () => checkAuth(),
     navigate, toast, modal, confirm, logout, loadYears, showApp, showLogin,
     showPrivacyModal, showTermsModal, showTeacherManual, showAdminManual,
-    isSimulationMode, toggleSimulationMode, renderSimControl, triggerPwaInstall,
+    isSimulationMode, toggleSimulationMode, renderSimControl, triggerPwaInstall, triggerInviteColleague,
     getState: () => state,
     isAdmin, isAdminMaster, isTeacher
   };
