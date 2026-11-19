@@ -11,16 +11,16 @@ var SettingsView = (() => {
       container.innerHTML='<div class="empty-state"><div class="icon">🔒</div><h3>Accesso non autorizzato</h3></div>'; return;
     }
     
-    // Available tabs based on role
-    const allTabs = ['years','classes','users','log','testmode','password'];
+    // Available tabs based on role (la gestione ruoli è ora centralizzata in Amministrazione -> Ruoli & Permessi)
+    const allTabs = ['years','classes','log','testmode','password'];
     const visibleTabs = isAdminMaster ? allTabs : allTabs.filter(t => t !== 'log');
     
     container.innerHTML = `
-      <div class="page-header"><div class="page-title">⚙️ Impostazioni</div><div class="page-subtitle">Anni scolastici, classi e gestione utenti</div></div>
+      <div class="page-header"><div class="page-title">⚙️ Impostazioni</div><div class="page-subtitle">Anni scolastici, classi e configurazione sistema</div></div>
       <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--bg-secondary);padding:4px;border-radius:var(--radius);width:fit-content;overflow-x:auto;max-width:100%">
         ${visibleTabs.map(t=>`
           <button class="btn ${_activeTab===t?'btn-primary':'btn-ghost'} btn-sm" style="border-radius:6px; white-space:nowrap" onclick="SettingsView.setTab('${t}')" id="tab-${t}">
-            ${{years:'🗓 Anni',classes:'🏫 Classi',users:'👥 Utenti',log:'📜 Log Sistema',testmode:'🧪 Modalità Test',password:'🔐 Password'}[t]}
+            ${{years:'🗓 Anni',classes:'🏫 Classi',log:'📜 Log Sistema',testmode:'🧪 Modalità Test',password:'🔐 Password'}[t]}
           </button>`).join('')}
       </div>
       <div id="settings-content"></div>`;

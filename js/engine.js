@@ -384,9 +384,10 @@ const Engine = (() => {
       const user = adminUser || currentDb.users.find(u => u.teacher_id === (teacher ? teacher.id : null));
       if (!user) {
         if (teacher) {
+           const initialRole = (teacher.role === 'admin' || teacher.is_admin) ? 'admin' : 'teacher';
            const newUser = {
              username: email.split('@')[0],
-             role: 'teacher', teacher_id: teacher.id,
+             role: initialRole, teacher_id: teacher.id,
              email, created_at: new Date().toISOString()
            };
            const docRef = await db.collection('users').add(newUser);
@@ -395,6 +396,13 @@ const Engine = (() => {
         await auth.signOut();
         throw new Error(`Utente ${email} non presente nel database scolastico.`);
       }
+
+      // Se il docente è stato promosso a gestore o reimpostato, sincronizza il ruolo
+      if (teacher && user.role !== 'admin_master' && teacher.role && user.role !== teacher.role) {
+        user.role = teacher.role;
+        db.collection('users').doc(String(user.id)).update({ role: teacher.role }).catch(() => {});
+      }
+
       return { token: user.id || user.username, user: { ...user, teacher } };
     },
 

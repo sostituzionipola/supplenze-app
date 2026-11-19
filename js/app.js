@@ -23,6 +23,7 @@ const APP = (() => {
     substitutions: 'Sostituzioni',
     daily_overview: 'Prospetto Giornaliero',
     teachers: 'Gestione Docenti',
+    roles: 'Ruoli & Permessi',
     schedule: 'Orario Scolastico',
     settings: 'Impostazioni',
     teacher_self_service: 'La Mia Area Docente',
@@ -53,6 +54,7 @@ const APP = (() => {
       substitutions: typeof SubstitutionsView !== 'undefined' ? SubstitutionsView : { render: (c) => c.innerHTML = 'Errore caricamento Sostituzioni' },
       daily_overview: typeof DailyOverviewView !== 'undefined' ? DailyOverviewView : { render: (c) => c.innerHTML = 'Errore caricamento Prospetto' },
       teachers: typeof TeachersView !== 'undefined' ? TeachersView : { render: (c) => c.innerHTML = 'Errore caricamento Docenti' },
+      roles: typeof RolesView !== 'undefined' ? RolesView : { render: (c, s) => RolesView.render(c, s) },
       schedule: typeof ScheduleView !== 'undefined' ? ScheduleView : { render: (c) => c.innerHTML = 'Errore caricamento Orario' },
       settings: typeof SettingsView !== 'undefined' ? SettingsView : { render: (c) => c.innerHTML = '<div class="empty-state"><h3>Errore di caricamento Impostazioni</h3><p>Controlla la console del browser per errori tecnici.</p></div>' },
       teacher_self_service: typeof TeacherSelfServiceView !== 'undefined' ? TeacherSelfServiceView : { render: (c) => c.innerHTML = 'Errore caricamento Area Docente' },
@@ -633,7 +635,7 @@ const APP = (() => {
     if (!currentViews[v]) return;
     
     if (v === 'settings' && !isAdminMaster()) { toast('Accesso riservato ad Admin Master.', 'warning'); return; }
-    if (['teachers', 'import_export', 'admin_notifications', 'instructions_admin'].includes(v) && !isAdmin()) {
+    if (['teachers', 'roles', 'import_export', 'admin_notifications', 'instructions_admin'].includes(v) && !isAdmin()) {
       toast('Permessi insufficienti.', 'warning'); return;
     }
 
@@ -930,6 +932,7 @@ const APP = (() => {
     // Amministrazione (riservata ad Admin e Master)
     showIf('#admin-section-label', isAdminOrMaster);
     showIf('.nav-item[data-view="teachers"]', isAdminOrMaster);
+    showIf('.nav-item[data-view="roles"]', isAdminOrMaster);
     showIf('.nav-item[data-view="admin_notifications"]', isAdminOrMaster);
     showIf('.nav-item[data-view="import_export"]', isAdminOrMaster);
     showIf('.nav-item[data-view="settings"]', isMaster); // Solo Admin Master!
@@ -940,6 +943,74 @@ const APP = (() => {
     showIf('.nav-item[data-view="organigramma"]', true);
 
     renderSimControl();
+  }
+
+  // ── PWA INSTALLAZIONE ──
+  let _deferredPwaPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    _deferredPwaPrompt = e;
+  });
+
+  function triggerPwaInstall() {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      toast('L\'applicazione è già installata a schermo intero!', 'info');
+      return;
+    }
+
+    if (_deferredPwaPrompt) {
+      _deferredPwaPrompt.prompt();
+      _deferredPwaPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          toast('Installazione avviata con successo!', 'success');
+        }
+        _deferredPwaPrompt = null;
+      });
+      return;
+    }
+
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    if (isIOS) {
+      modal({
+        title: '📲 Installa su iPhone / iPad',
+        body: `
+          <div style="text-align:center; padding:10px 0;">
+            <div style="font-size:42px; margin-bottom:12px;">📲</div>
+            <p style="font-size:14px; line-height:1.6; color:var(--text-primary); margin-bottom:16px;">
+              Per installare l'applicazione sul tuo iPhone o iPad:
+            </p>
+            <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:10px; padding:14px; text-align:left; font-size:13px; line-height:1.7;">
+              <div style="margin-bottom:8px;">1. Tocca l'icona <strong>Condividi</strong> (<span style="font-size:15px;">⎋</span> freccia verso l'alto) in basso su Safari.</div>
+              <div>2. Scorri il menu e seleziona <strong>"Aggiungi alla schermata Home"</strong> ➕.</div>
+            </div>
+          </div>
+        `,
+        footer: '<button class="btn btn-primary" style="width:100%" onclick="this.closest(\'.modal-overlay\').remove()">Ho capito</button>',
+        size: 'modal-sm'
+      });
+      return;
+    }
+
+    modal({
+      title: '📲 Installa Applicazione',
+      body: `
+        <div style="text-align:center; padding:10px 0;">
+          <div style="font-size:42px; margin-bottom:12px;">💻 📱</div>
+          <p style="font-size:14px; line-height:1.6; color:var(--text-primary); margin-bottom:16px;">
+            Puoi installare questa applicazione su qualsiasi smartphone Android, PC o Mac:
+          </p>
+          <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:10px; padding:14px; text-align:left; font-size:13px; line-height:1.7;">
+            <div style="margin-bottom:8px;"><strong>Su smartphone Android:</strong> tocca i <strong>tre puntini ⋮</strong> in alto a destra su Chrome e seleziona <em>"Aggiungi a schermata Home"</em> o <em>"Installa app"</em>.</div>
+            <div><strong>Su PC / Mac (Chrome o Edge):</strong> clicca sull'icona di installazione (<span style="font-size:15px;">⊕</span> o monitor) nella barra degli indirizzi in alto a destra.</div>
+          </div>
+        </div>
+      `,
+      footer: '<button class="btn btn-primary" style="width:100%" onclick="this.closest(\'.modal-overlay\').remove()">Chiudi</button>',
+      size: 'modal-sm'
+    });
   }
 
   function logout() {
@@ -954,7 +1025,7 @@ const APP = (() => {
     init: () => checkAuth(),
     navigate, toast, modal, confirm, logout, loadYears, showApp, showLogin,
     showPrivacyModal, showTermsModal, showTeacherManual, showAdminManual,
-    isSimulationMode, toggleSimulationMode, renderSimControl,
+    isSimulationMode, toggleSimulationMode, renderSimControl, triggerPwaInstall,
     getState: () => state,
     isAdmin, isAdminMaster, isTeacher
   };

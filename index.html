@@ -86,6 +86,11 @@
         <span>Accedi</span>
       </button>
     </form>
+    <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border); text-align:center;">
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-pwa-install-login" onclick="APP.triggerPwaInstall()" style="font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:6px; color:var(--accent); width:100%; justify-content:center;">
+        📲 Scarica / Installa App sul Dispositivo
+      </button>
+    </div>
   </div>
 
   <!-- REGISTRATION CARD -->
@@ -185,9 +190,17 @@
         <span class="nav-icon">📜</span> Termini d'Uso
       </div>
 
+      <div class="nav-section-label" style="margin-top:16px">Applicazione</div>
+      <div class="nav-item" id="nav-item-pwa-install" onclick="APP.triggerPwaInstall()" style="cursor:pointer; color:var(--accent); font-weight:600;">
+        <span class="nav-icon">📲</span> Installa App
+      </div>
+
       <div class="nav-section-label" id="admin-section-label" style="margin-top:24px">Amministrazione</div>
       <div class="nav-item" data-view="teachers">
         <span class="nav-icon">👨‍🏫</span> Gestione Docenti
+      </div>
+      <div class="nav-item" data-view="roles" id="nav-roles">
+        <span class="nav-icon">🛡️</span> Ruoli & Permessi
       </div>
       <div class="nav-item" data-view="admin_notifications" id="nav-admin-notif">
         <span class="nav-icon">🔔</span> Richieste Docenti
@@ -256,12 +269,13 @@
 
 <!-- SCRIPTS -->
 <script src="js/utils.js?v=2.9"></script>
-<script src="js/engine.js?v=3.0"></script>
+<script src="js/engine.js?v=3.1"></script>
 <script src="js/api.js?v=3.0"></script>
 <script src="js/operational_registry.js?v=4.0"></script>
 <script src="js/admin_notifications.js?v=2.9"></script>
 <script src="js/seed_complex_data.js?v=2.9"></script>
 <script src="js/teachers.js?v=3.5"></script>
+<script src="js/roles.js?v=1.0"></script>
 <script src="js/schedule.js?v=3.9"></script>
 <script src="js/absences.js?v=2.9"></script>
 <script src="js/substitutions.js?v=2.9"></script>
@@ -272,7 +286,7 @@
 <script src="js/import_export.js?v=3.0"></script>
 <script src="js/events.js?v=3.0"></script>
 <script src="js/organigramma.js?v=2.9"></script>
-<script src="js/app.js?v=3.9"></script>
+<script src="js/app.js?v=4.0"></script>
 <script>
 // Google Sign-In fallback trigger
 function triggerGoogleSignIn() {
